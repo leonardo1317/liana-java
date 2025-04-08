@@ -1,0 +1,10 @@
+.DS_Store
+.gradle/
+build/
+.idea/
+
+# Ignorar clase Main
+**/Main.java
+
+# Ignorar todo lo que esté en src/main/resources/
+src/main/resources/
