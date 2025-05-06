@@ -82,7 +82,7 @@ rest.timeout=5000
 
 ## 📜 Licencia
 
-MIT
+Apache License 2.0
 
 ---
 
