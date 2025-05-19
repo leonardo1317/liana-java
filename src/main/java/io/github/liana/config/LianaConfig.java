@@ -1,19 +1,26 @@
-package io.github.liana.config;
-
-/*
+/**
  * Copyright 2025 Leonardo Favio Romero Silva
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
+ * <p>
+ * <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache-2.0</a>
+ */
+package io.github.liana.config;
+
+/**
+ * Provides access to the singleton {@link ConfigManager} used to manage configuration loading.
+ * <p>
+ * This class acts as a static entry point for retrieving the default configuration manager
+ * instance, typically used throughout the application to load and access configuration values.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * <p>Example usage:
+ * <pre>{@code
+ * ConfigManager config = LianaConfig.getInstance();
+ * }</pre>
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * <p>This class cannot be instantiated.
  */
 public final class LianaConfig {
 
@@ -22,6 +29,11 @@ public final class LianaConfig {
     private LianaConfig() {
     }
 
+    /**
+     * Returns the singleton instance of the {@link ConfigManager}.
+     *
+     * @return the default configuration manager instance
+     */
     public static ConfigManager getInstance() {
         return INSTANCE;
     }

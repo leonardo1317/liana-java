@@ -62,6 +62,6 @@ class DefaultConfigReader implements ConfigReader {
 
     @Override
     public <T> T getValue(String key, Class<T> clazz) {
-        return config.getValue(key, clazz);
+        return config.getValue(key, clazz, null);
     }
 }

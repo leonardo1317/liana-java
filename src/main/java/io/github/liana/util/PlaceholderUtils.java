@@ -1,4 +1,4 @@
-package io.github.liana.config;
+package io.github.liana.util;
 
 import org.apache.commons.text.StringSubstitutor;
 
@@ -20,13 +20,13 @@ public final class PlaceholderUtils {
     }
 
     public static <V> Optional<String> replaceIfAllPresent(String pattern, Map<String, V> valueMap) {
-        if (pattern.isBlank() || valueMap.isEmpty()) {
+        if (pattern.isBlank()) {
             return Optional.empty();
         }
 
         Set<String> requiredPlaceholders = extractPlaceholders(pattern);
         if (requiredPlaceholders.isEmpty()) {
-            return Optional.empty();
+            return Optional.of(pattern);
         }
 
         boolean allPlaceholdersValid = requiredPlaceholders.stream()

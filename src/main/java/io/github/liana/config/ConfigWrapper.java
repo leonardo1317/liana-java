@@ -17,8 +17,8 @@ class ConfigWrapper {
         this.config = config;
     }
 
-    public <T> T getValue(String key, Class<T> clazz) {
-        return config.get(clazz, key, null);
+    public <T> T getValue(String key, Class<T> clazz, T defaultValue) {
+        return config.get(clazz, key, defaultValue);
     }
 
     public Map<String, Object> getAllSettings() {

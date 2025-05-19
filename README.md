@@ -1,4 +1,4 @@
-<img src="liana-logo.png" alt="Liana Logo" width="200"/>
+<img src="liana-logo-transparent.png" alt="Liana Logo" width="300"/>
 
 # Liana
 

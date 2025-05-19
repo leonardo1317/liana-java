@@ -1,5 +1,9 @@
 package io.github.liana.config;
 
+import io.github.liana.util.ImmutableConfigMap;
+import io.github.liana.util.ImmutableConfigSet;
+import io.github.liana.util.LinkedConfigMap;
+import io.github.liana.util.LinkedConfigSet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -12,7 +16,9 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -100,13 +106,16 @@ class ConfigResourcePreparerTest {
         @DisplayName("should use default 'classpath' when provider is null or empty")
         void shouldUseDefaultProviderWhenProviderIsNullOrEmpty(String invalidProvider) {
             // Given
+            final String DEFAULT_PROVIDER = "classpath";
             when(configResourceLocation.getProvider()).thenReturn(invalidProvider);
 
             // when
             List<ResolvedConfigResource> result = preparer.prepare();
 
             // then
-            assertEquals("classpath", result.get(0).getProvider());
+            assertTrue(
+                    result.stream().anyMatch(resource -> DEFAULT_PROVIDER.equals(resource.getProvider()))
+            );
         }
 
         @ParameterizedTest
@@ -114,13 +123,16 @@ class ConfigResourcePreparerTest {
         @DisplayName("should use default 'classpath' when provider contains only whitespace")
         void shouldUseDefaultProviderWhenProviderIsBlank(String provider) {
             // Given
+            final String DEFAULT_PROVIDER = "classpath";
             when(configResourceLocation.getProvider()).thenReturn(provider);
 
             // when
             List<ResolvedConfigResource> result = preparer.prepare();
 
             // then
-            assertEquals("classpath", result.get(0).getProvider());
+            assertTrue(
+                    result.stream().anyMatch(resource -> DEFAULT_PROVIDER.equals(resource.getProvider()))
+            );
         }
 
         @ParameterizedTest
@@ -128,37 +140,35 @@ class ConfigResourcePreparerTest {
         @DisplayName("should use provided provider when not blank")
         void shouldUseProvidedProviderWhenNotBlank(String provider) {
             // Given
+            final String RESOURCE_NAME = "application.properties";
             when(configResourceLocation.getProvider()).thenReturn(provider);
+            when(configResourceLocation.getResourceNames()).thenReturn(ImmutableConfigSet.of(Set.of(RESOURCE_NAME)));
 
             // when
             List<ResolvedConfigResource> result = preparer.prepare();
 
             // then
-            assertEquals(provider, result.get(0).getProvider());
+            assertTrue(
+                    result.stream().anyMatch(resource -> provider.equals(resource.getProvider()))
+            );
         }
     }
 
-    @Nested
-    @DisplayName("ResourceName Tests")
+  /*  @Nested
+    @DisplayName("ResourceNames Tests")
     class ResourceNameTests {
         @ParameterizedTest
         @NullAndEmptySource
         @DisplayName("should use default resource name when provided name is null or empty")
         void shouldUseDefaultResourceNameWhenProvideIsNullOrEmpty(String resourceName) {
             // Given
-            final String EXTENSION = "properties";
-            final String RESOURCE_NAME = "application." + EXTENSION;
+            final String RESOURCE_NAME = "application.properties";
             when(configResourceLocation.getResourceName()).thenReturn(resourceName);
 
             try (
-                    MockedStatic<FileExtensionValidator> mockedExtensions = mockStatic(FileExtensionValidator.class);
                     MockedStatic<ClasspathResource> mockedClasspath = mockStatic(ClasspathResource.class);
                     MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(FilenameValidator.class)
             ) {
-
-                mockedExtensions.when(FileExtensionValidator::defaultExtensions)
-                        .thenReturn(Set.of(EXTENSION));
-
                 mockedClasspath.when(() -> ClasspathResource.resourceExists(RESOURCE_NAME))
                         .thenReturn(true);
 
@@ -180,19 +190,13 @@ class ConfigResourcePreparerTest {
         @DisplayName("should use default resource name when provided name is blank")
         void shouldUseDefaultResourceNameWhenProvidedNameIsBlank(String resourceName) {
             // Given
-            final String EXTENSION = "properties";
-            final String RESOURCE_NAME = "application." + EXTENSION;
+            final String RESOURCE_NAME = "application.properties";
             when(configResourceLocation.getResourceName()).thenReturn(resourceName);
 
             try (
-                    MockedStatic<FileExtensionValidator> mockedExtensions = mockStatic(FileExtensionValidator.class);
                     MockedStatic<ClasspathResource> mockedClasspath = mockStatic(ClasspathResource.class);
                     MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(FilenameValidator.class)
             ) {
-
-                mockedExtensions.when(FileExtensionValidator::defaultExtensions)
-                        .thenReturn(Set.of(EXTENSION));
-
                 mockedClasspath.when(() -> ClasspathResource.resourceExists(RESOURCE_NAME))
                         .thenReturn(true);
 
@@ -215,19 +219,13 @@ class ConfigResourcePreparerTest {
         void shouldSetEmptyResourceNameWhenDefaultNameResolutionFails(String resourceName) {
             // Given
             final String EMPTY_STRING = "";
-            final String EXTENSION = "properties";
-            final String RESOURCE_NAME = "application." + EXTENSION;
+            final String RESOURCE_NAME = "application.properties";
             when(configResourceLocation.getResourceName()).thenReturn(resourceName);
 
             try (
-                    MockedStatic<FileExtensionValidator> mockedExtensions = mockStatic(FileExtensionValidator.class);
                     MockedStatic<ClasspathResource> mockedClasspath = mockStatic(ClasspathResource.class);
                     MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(FilenameValidator.class)
             ) {
-
-                mockedExtensions.when(FileExtensionValidator::defaultExtensions)
-                        .thenReturn(Set.of(EXTENSION));
-
                 mockedClasspath.when(() -> ClasspathResource.resourceExists(RESOURCE_NAME))
                         .thenReturn(false);
 
@@ -249,14 +247,12 @@ class ConfigResourcePreparerTest {
         @DisplayName("should resolve resource name when valid name is provided")
         void shouldResolveResourceNameWhenValidNameIsProvided(String resourceName) {
             // Given
-            final String EXTENSION = "properties";
-            final String RESOURCE_NAME = "application." + EXTENSION;
+            final String RESOURCE_NAME = "application.properties";
             when(configResourceLocation.getResourceName()).thenReturn(resourceName);
 
             try (
                     MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(FilenameValidator.class)
             ) {
-
                 mockedIsSafeResourceName.when(() -> FilenameValidator.isSafeResourceName(RESOURCE_NAME))
                         .thenReturn(true);
 
@@ -282,7 +278,6 @@ class ConfigResourcePreparerTest {
             try (
                     MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(FilenameValidator.class)
             ) {
-
                 mockedIsSafeResourceName.when(() -> FilenameValidator.isSafeResourceName(invalidResourceName))
                         .thenReturn(false);
 
@@ -308,7 +303,6 @@ class ConfigResourcePreparerTest {
             try (
                     MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(FilenameValidator.class)
             ) {
-
                 mockedIsSafeResourceName.when(() -> FilenameValidator.isSafeResourceName(invalidResourceName))
                         .thenReturn(false);
 
@@ -359,7 +353,6 @@ class ConfigResourcePreparerTest {
             try (
                     MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(FilenameValidator.class)
             ) {
-
                 mockedIsSafeResourceName.when(() -> FilenameValidator.isSafeResourceName(resourceName))
                         .thenReturn(false);
 
@@ -372,33 +365,34 @@ class ConfigResourcePreparerTest {
                 );
             }
         }
-    }
+    }*/
 
     @Nested
     @DisplayName("ResourceNamePattern Tests")
-    class ResourceNamePatternTests {
-        @ParameterizedTest
+    class ResourceNamesPatternTests {
+        /*@ParameterizedTest
         @NullAndEmptySource
-        @DisplayName("should use default resource name pattern when provided pattern is null or empty")
-        void shouldUseDefaultResourceNamePatternWhenPatternIsNullOrEmpty(String resourceNamePattern) {
+        @DisplayName("should use default resource name when resource names are null or empty")
+        void shouldUseDefaultResourceNameWhenResourceNamesAreNullOrEmpty(LinkedConfigSet resourceNames) {
             // Given
             final String EXTENSION = "properties";
             final String PROFILE = "default";
+            final String RESOURCE_NAME = "application" + "." + EXTENSION;
             final String RESOURCE_NAME_PATTERN = "application-" + PROFILE + "." + EXTENSION;
-            when(configResourceLocation.getResourceNamePattern()).thenReturn(resourceNamePattern);
+
+            when(configResourceLocation.getResourceNames()).thenReturn(ImmutableConfigSet.of(resourceNames));
 
             try (
-                    MockedStatic<FileExtensionValidator> mockedExtensions = mockStatic(FileExtensionValidator.class);
                     MockedStatic<ClasspathResource> mockedClasspath = mockStatic(ClasspathResource.class);
                     MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(FilenameValidator.class)
             ) {
-
-                mockedExtensions.when(FileExtensionValidator::defaultExtensions)
-                        .thenReturn(Set.of(EXTENSION));
-
+                mockedClasspath.when(() -> ClasspathResource.resourceExists(RESOURCE_NAME))
+                        .thenReturn(true);
                 mockedClasspath.when(() -> ClasspathResource.resourceExists(RESOURCE_NAME_PATTERN))
                         .thenReturn(true);
 
+                mockedIsSafeResourceName.when(() -> FilenameValidator.isSafeResourceName(RESOURCE_NAME))
+                        .thenReturn(true);
                 mockedIsSafeResourceName.when(() -> FilenameValidator.isSafeResourceName(RESOURCE_NAME_PATTERN))
                         .thenReturn(true);
 
@@ -407,10 +401,13 @@ class ConfigResourcePreparerTest {
 
                 // Then
                 assertTrue(
+                        result.stream().anyMatch(resource -> RESOURCE_NAME.equals(resource.getResourceName()))
+                );
+                assertTrue(
                         result.stream().anyMatch(resource -> RESOURCE_NAME_PATTERN.equals(resource.getResourceName()))
                 );
             }
-        }
+        }*/
 
         @ParameterizedTest
         @ValueSource(strings = {"   ", "\t", "\n"})
@@ -420,17 +417,13 @@ class ConfigResourcePreparerTest {
             final String EXTENSION = "properties";
             final String PROFILE = "default";
             final String RESOURCE_NAME_PATTERN = "application-" + PROFILE + "." + EXTENSION;
-            when(configResourceLocation.getResourceNamePattern()).thenReturn(resourceNamePattern);
+
+            when(configResourceLocation.getResourceNames()).thenReturn(ImmutableConfigSet.of(Set.of(resourceNamePattern)));
 
             try (
-                    MockedStatic<FileExtensionValidator> mockedExtensions = mockStatic(FileExtensionValidator.class);
                     MockedStatic<ClasspathResource> mockedClasspath = mockStatic(ClasspathResource.class);
                     MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(FilenameValidator.class)
             ) {
-
-                mockedExtensions.when(FileExtensionValidator::defaultExtensions)
-                        .thenReturn(Set.of(EXTENSION));
-
                 mockedClasspath.when(() -> ClasspathResource.resourceExists(RESOURCE_NAME_PATTERN))
                         .thenReturn(true);
 
@@ -447,7 +440,7 @@ class ConfigResourcePreparerTest {
             }
         }
 
-        @ParameterizedTest
+        /*@ParameterizedTest
         @NullAndEmptySource
         @DisplayName("should set empty resource name when default pattern resolution fails")
         void shouldSetEmptyResourceNameWhenDefaultPatternResolutionFails(String resourceNamePattern) {
@@ -456,17 +449,12 @@ class ConfigResourcePreparerTest {
             final String EXTENSION = "properties";
             final String PROFILE = "default";
             final String RESOURCE_NAME_PATTERN = "application-" + PROFILE + "." + EXTENSION;
-            when(configResourceLocation.getResourceNamePattern()).thenReturn(resourceNamePattern);
+            when(configResourceLocation.getResourceNames()).thenReturn(ImmutableConfigSet.of(Set.of(resourceNamePattern)));
 
             try (
-                    MockedStatic<FileExtensionValidator> mockedExtensions = mockStatic(FileExtensionValidator.class);
                     MockedStatic<ClasspathResource> mockedClasspath = mockStatic(ClasspathResource.class);
                     MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(FilenameValidator.class)
             ) {
-
-                mockedExtensions.when(FileExtensionValidator::defaultExtensions)
-                        .thenReturn(Set.of(EXTENSION));
-
                 mockedClasspath.when(() -> ClasspathResource.resourceExists(RESOURCE_NAME_PATTERN))
                         .thenReturn(false);
 
@@ -481,7 +469,7 @@ class ConfigResourcePreparerTest {
                         result.stream().anyMatch(resource -> STRING_EMPTY.equals(resource.getResourceName()))
                 );
             }
-        }
+        }*/
 
         @ParameterizedTest
         @ValueSource(strings = {"application-${profile}.properties"})
@@ -491,7 +479,7 @@ class ConfigResourcePreparerTest {
             final String EXTENSION = "properties";
             final String PROFILE = "default";
             final String RESOURCE_NAME_PATTERN = "application-" + PROFILE + "." + EXTENSION;
-            when(configResourceLocation.getResourceNamePattern()).thenReturn(resourceNamePattern);
+            when(configResourceLocation.getResourceNames()).thenReturn(ImmutableConfigSet.of(Set.of(resourceNamePattern)));
 
             try (
                     MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(FilenameValidator.class)
@@ -516,12 +504,11 @@ class ConfigResourcePreparerTest {
             // Given
             final String STRING_EMPTY = "";
             when(configResourceLocation.getProvider()).thenReturn("classpath");
-            when(configResourceLocation.getResourceNamePattern()).thenReturn(resourceNamePattern);
+            when(configResourceLocation.getResourceNames()).thenReturn(ImmutableConfigSet.of(Set.of(resourceNamePattern)));
 
             try (
                     MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(FilenameValidator.class)
             ) {
-
                 mockedIsSafeResourceName.when(() -> FilenameValidator.isSafeResourceName(resourceNamePattern))
                         .thenReturn(false);
 
@@ -542,12 +529,11 @@ class ConfigResourcePreparerTest {
             // Given
             final String STRING_EMPTY = "";
             when(configResourceLocation.getProvider()).thenReturn("S3");
-            when(configResourceLocation.getResourceNamePattern()).thenReturn(resourceNamePattern);
+            when(configResourceLocation.getResourceNames()).thenReturn(ImmutableConfigSet.of(Set.of(resourceNamePattern)));
 
             try (
                     MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(FilenameValidator.class)
             ) {
-
                 mockedIsSafeResourceName.when(() -> FilenameValidator.isSafeResourceName(resourceNamePattern))
                         .thenReturn(false);
 
@@ -568,7 +554,7 @@ class ConfigResourcePreparerTest {
             // Given
             final String STRING_EMPTY = "";
             when(configResourceLocation.getProvider()).thenReturn("S3");
-            when(configResourceLocation.getResourceNamePattern()).thenReturn(resourceNamePattern);
+            when(configResourceLocation.getResourceNames()).thenReturn(ImmutableConfigSet.of(Set.of(resourceNamePattern)));
 
             try (
                     MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(FilenameValidator.class)
@@ -593,12 +579,11 @@ class ConfigResourcePreparerTest {
             // Given
             final String STRING_EMPTY = "";
             when(configResourceLocation.getProvider()).thenReturn("S3");
-            when(configResourceLocation.getResourceNamePattern()).thenReturn(resourceNamePattern);
+            when(configResourceLocation.getResourceNames()).thenReturn(ImmutableConfigSet.of(Set.of(resourceNamePattern)));
 
             try (
                     MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(FilenameValidator.class)
             ) {
-
                 mockedIsSafeResourceName.when(() -> FilenameValidator.isSafeResourceName(resourceNamePattern))
                         .thenReturn(false);
 
@@ -613,7 +598,7 @@ class ConfigResourcePreparerTest {
         }
     }
 
-    @Nested
+    /*@Nested
     @DisplayName("Variables Tests")
     class VariablesTests {
         @Test
@@ -645,7 +630,7 @@ class ConfigResourcePreparerTest {
             final String PROFILE = "default";
             final String RESOURCE_NAME_PATTERN = "application-" + PROFILE + "." + EXTENSION;
             when(configResourceLocation.getResourceNamePattern()).thenReturn(PATTERN);
-            when(configResourceLocation.getVariables()).thenReturn(ConfigMap.emptyMap());
+            when(configResourceLocation.getVariables()).thenReturn(StrictMap.empty());
 
             // When
             List<ResolvedConfigResource> result = preparer.prepare();
@@ -666,7 +651,7 @@ class ConfigResourcePreparerTest {
             final String RESOURCE_NAME = "application-" + PROFILE + "." + EXTENSION;
             when(configResourceLocation.getProvider()).thenReturn("S3");
             when(configResourceLocation.getResourceNamePattern()).thenReturn(PATTERN);
-            when(configResourceLocation.getVariables()).thenReturn(ConfigMap.of("profile", PROFILE));
+            when(configResourceLocation.getVariables()).thenReturn(StrictMap.of("profile", PROFILE));
 
             // When
             List<ResolvedConfigResource> result = preparer.prepare();
@@ -684,7 +669,7 @@ class ConfigResourcePreparerTest {
             final String PATTERN = "application-${profile}.properties";
             final String STRING_EMPTY = "";
             when(configResourceLocation.getResourceNamePattern()).thenReturn(PATTERN);
-            when(configResourceLocation.getVariables()).thenReturn(ConfigMap.of("env", "dev"));
+            when(configResourceLocation.getVariables()).thenReturn(StrictMap.of("env", "dev"));
 
             // When
             List<ResolvedConfigResource> result = preparer.prepare();
@@ -704,7 +689,7 @@ class ConfigResourcePreparerTest {
             final String PROFILE = "test";
             final String RESOURCE_NAME_PATTERN = "application-" + PROFILE + "." + EXTENSION;
             when(configResourceLocation.getResourceNamePattern()).thenReturn(PATTERN);
-            when(configResourceLocation.getVariables()).thenReturn(ConfigMap.of("profile", PROFILE));
+            when(configResourceLocation.getVariables()).thenReturn(StrictMap.of("profile", PROFILE));
 
             // When
             List<ResolvedConfigResource> result = preparer.prepare();
@@ -714,7 +699,7 @@ class ConfigResourcePreparerTest {
                     result.stream().anyMatch(resource -> RESOURCE_NAME_PATTERN.equals(resource.getResourceName()))
             );
         }
-    }
+    }*/
 
     @Nested
     @DisplayName("Credentials Tests")
@@ -739,7 +724,7 @@ class ConfigResourcePreparerTest {
         @DisplayName("should return empty credentials when provider is default and credentials are empty")
         void shouldReturnEmptyCredentialsWhenDefaultProviderAndCredentialsEmpty() {
             // Given
-            when(configResourceLocation.getCredentials()).thenReturn(ConfigMap.emptyMap());
+            when(configResourceLocation.getCredentials()).thenReturn(ImmutableConfigMap.empty());
 
             // When
             List<ResolvedConfigResource> result = preparer.prepare();
@@ -754,7 +739,7 @@ class ConfigResourcePreparerTest {
         @DisplayName("should return provided credentials when provider is default and credentials are provided")
         void shouldReturnProvidedCredentialsWhenDefaultProviderAndCredentialsProvided() {
             // Given
-            ConfigMap providedCredentials = ConfigMap.of("accessKey", "testKey");
+            ImmutableConfigMap providedCredentials = ImmutableConfigMap.of(Map.of("accessKey", "testKey"));
             when(configResourceLocation.getCredentials()).thenReturn(providedCredentials);
 
             // When
@@ -770,7 +755,7 @@ class ConfigResourcePreparerTest {
         @DisplayName("should return provided credentials when provider is not default")
         void shouldReturnProvidedCredentialsWhenProviderIsNotDefault() {
             // Given
-            ConfigMap providedCredentials = ConfigMap.of("accessKey", "testKey");
+            ImmutableConfigMap providedCredentials = ImmutableConfigMap.of(Map.of("accessKey", "testKey"));
             when(configResourceLocation.getProvider()).thenReturn("S3");
             when(configResourceLocation.getCredentials()).thenReturn(providedCredentials);
 

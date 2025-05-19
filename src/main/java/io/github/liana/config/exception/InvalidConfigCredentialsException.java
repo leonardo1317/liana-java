@@ -1,4 +1,4 @@
-package io.github.liana.config;
+package io.github.liana.config.exception;
 
 public class InvalidConfigCredentialsException extends IllegalArgumentException {
     public InvalidConfigCredentialsException(String message) {

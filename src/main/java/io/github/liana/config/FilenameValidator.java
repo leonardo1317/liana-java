@@ -2,7 +2,6 @@ package io.github.liana.config;
 
 import org.apache.commons.io.FilenameUtils;
 import java.util.Locale;
-import static io.github.liana.config.FileExtensionValidator.defaultExtensions;
 
 final class FilenameValidator {
 
@@ -30,6 +29,6 @@ final class FilenameValidator {
         }
 
         String extension = FilenameUtils.getExtension(fileName).toLowerCase(Locale.ROOT);
-        return defaultExtensions().contains(extension);
+        return ConfigFileFormat.getAllSupportedExtensions().contains(extension);
     }
 }

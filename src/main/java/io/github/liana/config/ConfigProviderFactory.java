@@ -1,22 +1,21 @@
 package io.github.liana.config;
 
-import java.util.Set;
+import java.util.List;
 
 class ConfigProviderFactory {
-    private static final Set<ConfigProvider> strategies = Set.of(
-            new ClasspathConfigProvider(),
-            new GitHubConfigProvider()
+    private static final List<ConfigProvider> strategies = List.of(
+            new ClasspathConfigProvider()
     );
 
     private ConfigProviderFactory() {
     }
 
-    public static ConfigResource resolveResource(ResolvedConfigResource locator) {
+    public static ConfigResource create(ResolvedConfigResource resource) {
         return strategies.stream()
-                .filter(strategy -> strategy.getProvider().equalsIgnoreCase(locator.getProvider()))
+                .filter(strategy -> strategy.getProvider().equalsIgnoreCase(resource.getProvider()))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No config provider found for provider: " + locator.getProvider()))
-                .resolveResource(locator);
+                .orElseThrow(() -> new IllegalArgumentException("No config provider found for provider: " + resource.getProvider()))
+                .resolveResource(resource);
     }
 }
 

@@ -1,112 +1,308 @@
-package io.github.liana.config;
-
-/*
+/**
  * Copyright 2025 Leonardo Favio Romero Silva
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
+ * <p>
+ * <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache-2.0</a>
+ */
+package io.github.liana.config;
+
+import io.github.liana.config.exception.InvalidConfigCredentialsException;
+import io.github.liana.config.exception.InvalidConfigVariablesException;
+import io.github.liana.util.ImmutableConfigMap;
+import io.github.liana.util.ImmutableConfigSet;
+import io.github.liana.util.LinkedConfigMap;
+import io.github.liana.util.LinkedConfigSet;
+import io.github.liana.util.StringUtils;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static io.github.liana.config.ConfigDefaults.PROVIDER;
+import static io.github.liana.util.MapUtils.toMap;
+import static java.util.Objects.requireNonNull;
+
+/**
+ * Represents a configuration resource location, including its provider, resource names,
+ * variables, and credentials.
+ * <p>
+ * This class is typically built using its nested {@link Builder}, allowing clients
+ * to fluently configure where and how to load configuration resources (e.g., from classpath,
+ * S3, Azure Blob, etc.).
+ * <p>
+ * Resource names are maintained in insertion order and de-duplicated.
+ * Variables and credentials are stored securely in {@link LinkedConfigMap} instances.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * <p>Example usage:
+ * <pre>{@code
+ * ConfigResourceLocation location = ConfigResourceLocation.builder()
+ *     .provider("S3")
+ *     .addResources("config/app.yaml", "config/app-${evn}.yaml")
+ *     .addVariable("env", "dev")
+ *     .addCredential("secretKey", "*****")
+ *     .build();
+ * }</pre>
  */
 public class ConfigResourceLocation {
-    private final String provider;
-    private final String resourceName;
-    private final String resourceNamePattern;
-    private final ConfigMap variables;
-    private final ConfigMap credentials;
+    private static final String RESOURCES_MUST_NOT_BE_NULL = "resources must not be null";
+    private static final String VARIABLES_MUST_NOT_BE_NULL = "variables must not be null";
+    private static final String CREDENTIALS_MUST_NOT_BE_NULL = "credentials must not be null";
 
-    public ConfigResourceLocation(Builder builder) {
-        this.provider = builder.provider;
-        this.resourceName = builder.resourceName;
-        this.resourceNamePattern = builder.resourceNamePattern;
-        this.variables = builder.variables;
-        this.credentials = builder.credentials;
+    private final String provider;
+    private final ImmutableConfigSet resourceNames;
+    private final ImmutableConfigMap variables;
+    private final ImmutableConfigMap credentials;
+
+    /**
+     * Constructs a new {@code ConfigResourceLocation} instance.
+     *
+     * @param provider      the configuration provider (e.g., "classpath", "S3", "Azure Blob")
+     * @param resourceNames an immutable set of resource names
+     * @param variables     an immutable map of variables used for configuration
+     * @param credentials   an immutable map of credentials used for authentication
+     */
+    public ConfigResourceLocation(String provider, ImmutableConfigSet resourceNames, ImmutableConfigMap variables, ImmutableConfigMap credentials) {
+        this.provider = provider;
+        this.resourceNames = resourceNames;
+        this.variables = variables;
+        this.credentials = credentials;
     }
 
+    /**
+     * Gets the provider for the configuration.
+     *
+     * @return the provider (e.g., "classpath", "S3", "Azure Blob")
+     */
     public String getProvider() {
         return provider;
     }
 
-    public ConfigMap getCredentials() {
+    /**
+     * Gets the resource names for the configuration.
+     *
+     * @return a set of resource names
+     */
+    public ImmutableConfigSet getResourceNames() {
+        return resourceNames;
+    }
+
+    /**
+     * Gets the credentials associated with the configuration.
+     *
+     * @return the credentials as a {@link ImmutableConfigMap} instance
+     */
+    public ImmutableConfigMap getCredentials() {
         return credentials;
     }
 
-    public ConfigMap getVariables() {
+    /**
+     * Gets the variables associated with the configuration.
+     *
+     * @return the variables as a {@link ImmutableConfigMap} instance
+     */
+    public ImmutableConfigMap getVariables() {
         return variables;
     }
 
-    public String getResourceName() {
-        return resourceName;
-    }
-
-    public String getResourceNamePattern() {
-        return resourceNamePattern;
-    }
-
+    /**
+     * Returns a new {@link Builder} instance for constructing a {@link ConfigResourceLocation}.
+     *
+     * @return a new {@link Builder} instance
+     */
     public static Builder builder() {
         return new Builder();
     }
 
-    @Override
-    public String toString() {
-        return "ConfigResourceLocation{" +
-                "provider='" + provider + '\'' +
-                ", resourceName='" + resourceName + '\'' +
-                ", resourceNamePattern='" + resourceNamePattern + '\'' +
-                ", variables=" + variables +
-                ", credentials=" + credentials +
-                '}';
-    }
-
+    /**
+     * Builder class for creating instances of {@link ConfigResourceLocation}.
+     * Allows for fluent, step-by-step configuration of resource location details.
+     */
     public static class Builder {
         private String provider = "";
-        private String resourceName = "";
-        private String resourceNamePattern = "";
-        private ConfigMap variables = ConfigMap.emptyMap();
-        private ConfigMap credentials = ConfigMap.emptyMap();
+        private final Set<String> resourceNames = new LinkedConfigSet();
+        private final Map<String, String> variables = new LinkedConfigMap();
+        private final Map<String, String> credentials = new LinkedConfigMap();
 
+        /**
+         * Sets the provider for this configuration location.
+         *
+         * @param provider the provider name (e.g., "classpath", "S3", "Azure Blob")
+         * @return this builder instance for chaining
+         */
         public Builder provider(String provider) {
             this.provider = provider;
+
             return this;
         }
 
-        public Builder resourceName(String resourceName) {
-            this.resourceName = resourceName;
+        /**
+         * Adds a single resource name to the configuration.
+         *
+         * @param resourceName the resource name to add
+         * @return this builder instance for chaining
+         */
+        public Builder addResource(String resourceName) {
+            resourceNames.add(resourceName);
             return this;
         }
 
-        public Builder resourceNamePattern(String resourceNamePattern) {
-            this.resourceNamePattern = resourceNamePattern;
+        /**
+         * Adds multiple resource names to the configuration.
+         *
+         * @param resources an array of resource names to add
+         * @return this builder instance for chaining
+         * @throws NullPointerException if {@code resources} is null
+         */
+        public Builder addResources(String... resources) {
+            requireNonNull(resources, RESOURCES_MUST_NOT_BE_NULL);
+
+            return addResourceList(Arrays.asList(resources));
+        }
+
+        /**
+         * Adds multiple resource names to the configuration.
+         *
+         * @param resources a list of resource names to add
+         * @return this builder instance for chaining
+         * @throws NullPointerException if {@code resources} is null
+         */
+        public Builder addResourceList(List<String> resources) {
+            requireNonNull(resources, RESOURCES_MUST_NOT_BE_NULL);
+            resourceNames.addAll(resources);
+
             return this;
         }
 
-        public Builder variables(String... entries) {
+        /**
+         * Adds a single variable key-value pair to the configuration.
+         *
+         * @param key   the variable key
+         * @param value the variable value
+         * @return this builder instance for chaining
+         * @throws InvalidConfigVariablesException if the variable is invalid (e.g., key conflicts)
+         */
+        public Builder addVariable(String key, String value) {
             try {
-                this.variables = ConfigMap.of(entries);
+                variables.put(key, value);
             } catch (IllegalArgumentException ex) {
                 throw new InvalidConfigVariablesException(ex.getMessage());
             }
+
             return this;
         }
 
-        public Builder credentials(String... entries) {
+        /**
+         * Adds multiple variable key-value pairs to the configuration.
+         * The variables are provided as an array of alternating keys and values.
+         *
+         * @param variables array of alternating keys and values
+         * @return this builder instance for chaining
+         * @throws NullPointerException            if {@code variables} is null
+         * @throws InvalidConfigVariablesException if variables are invalid (e.g., keys conflict)
+         */
+        public Builder addVariables(String... variables) {
+            requireNonNull(variables, VARIABLES_MUST_NOT_BE_NULL);
+
             try {
-                this.credentials = ConfigMap.of(entries);
+                return addVariablesMap(toMap(variables));
+            } catch (IllegalArgumentException ex) {
+                throw new InvalidConfigVariablesException(ex.getMessage());
+            }
+        }
+
+        /**
+         * Adds multiple variable key-value pairs to the configuration.
+         *
+         * @param variables a map of variables to add
+         * @return this builder instance for chaining
+         * @throws NullPointerException            if {@code variables} is null
+         * @throws InvalidConfigVariablesException if variables are invalid (e.g., keys conflict)
+         */
+        public Builder addVariablesMap(Map<String, String> variables) {
+            requireNonNull(variables, VARIABLES_MUST_NOT_BE_NULL);
+
+            try {
+                this.variables.putAll(variables);
+            } catch (IllegalArgumentException ex) {
+                throw new InvalidConfigVariablesException(ex.getMessage());
+            }
+
+            return this;
+        }
+
+        /**
+         * Adds a single credential key-value pair to the configuration.
+         *
+         * @param key   the credential key
+         * @param value the credential value
+         * @return this builder instance for chaining
+         * @throws InvalidConfigCredentialsException if the credential is invalid (e.g., key conflicts)
+         */
+        public Builder addCredential(String key, String value) {
+            try {
+                credentials.put(key, value);
             } catch (IllegalArgumentException ex) {
                 throw new InvalidConfigCredentialsException(ex.getMessage());
             }
+
             return this;
         }
 
+        /**
+         * Adds multiple credential key-value pairs to the configuration.
+         * The credentials are provided as an array of alternating keys and values.
+         *
+         * @param credentials array of alternating keys and values
+         * @return this builder instance for chaining
+         * @throws NullPointerException              if {@code credentials} is null
+         * @throws InvalidConfigCredentialsException if credentials are invalid (e.g., keys conflict)
+         */
+        public Builder addCredentials(String... credentials) {
+            requireNonNull(credentials, CREDENTIALS_MUST_NOT_BE_NULL);
+
+            try {
+                return addCredentialsMap(toMap(credentials));
+            } catch (IllegalArgumentException ex) {
+                throw new InvalidConfigCredentialsException(ex.getMessage());
+            }
+        }
+
+        /**
+         * Adds multiple credential key-value pairs to the configuration.
+         *
+         * @param credentials a map of credentials to add
+         * @return this builder instance for chaining
+         * @throws NullPointerException              if {@code credentials} is null
+         * @throws InvalidConfigCredentialsException if credentials are invalid (e.g., keys conflict)
+         */
+        public Builder addCredentialsMap(Map<String, String> credentials) {
+            requireNonNull(credentials, CREDENTIALS_MUST_NOT_BE_NULL);
+
+            try {
+                this.credentials.putAll(credentials);
+            } catch (IllegalArgumentException ex) {
+                throw new InvalidConfigCredentialsException(ex.getMessage());
+            }
+
+            return this;
+        }
+
+        /**
+         * Builds the {@link ConfigResourceLocation} instance using the configured parameters.
+         *
+         * @return a new {@code ConfigResourceLocation} instance
+         */
         public ConfigResourceLocation build() {
-            return new ConfigResourceLocation(this);
+            return new ConfigResourceLocation(
+                    StringUtils.defaultIfBlank(provider, PROVIDER),
+                    ImmutableConfigSet.of(resourceNames),
+                    ImmutableConfigMap.of(variables),
+                    ImmutableConfigMap.of(credentials)
+            );
         }
     }
 }

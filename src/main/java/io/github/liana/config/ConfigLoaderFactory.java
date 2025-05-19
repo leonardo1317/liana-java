@@ -3,12 +3,10 @@ package io.github.liana.config;
 import org.apache.commons.io.FilenameUtils;
 
 import java.util.Map;
-import java.util.Set;
-
-import static io.github.liana.config.FileExtensionValidator.isValid;
+import java.util.List;
 
 class ConfigLoaderFactory {
-    private static final Set<ConfigLoader> strategies = Set.of(
+    private static final List<ConfigLoader> strategies = List.of(
             new YamlConfigLoader(),
             new PropertiesConfigLoader(),
             new JsonConfigLoader(),
@@ -18,16 +16,16 @@ class ConfigLoaderFactory {
     public ConfigLoaderFactory() {
     }
 
-    public static ConfigWrapper fromFile(ConfigResource resource) {
+    public static ConfigWrapper create(ConfigResource resource) {
         String fileExtension = FilenameUtils.getExtension(resource.getResourceName());
         return strategies.stream()
-                .filter(strategy -> isValid(strategy.getExtensions(), fileExtension))
+                .filter(strategy -> ConfigFileFormat.isExtensionForFormat(strategy.getFileFormat(), fileExtension))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unsupported config file: " + resource.getResourceName()))
                 .load(resource);
     }
 
-    public static ConfigWrapper fromMap(Map<String, Object> map) {
+    public static ConfigWrapper create(Map<String, Object> map) {
         return new ConfigWrapper(map);
     }
 }
