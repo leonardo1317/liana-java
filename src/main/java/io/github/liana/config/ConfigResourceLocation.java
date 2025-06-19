@@ -11,11 +11,11 @@ package io.github.liana.config;
 
 import io.github.liana.config.exception.InvalidConfigCredentialsException;
 import io.github.liana.config.exception.InvalidConfigVariablesException;
-import io.github.liana.util.ImmutableConfigMap;
-import io.github.liana.util.ImmutableConfigSet;
-import io.github.liana.util.LinkedConfigMap;
-import io.github.liana.util.LinkedConfigSet;
-import io.github.liana.util.StringUtils;
+import io.github.liana.internal.ImmutableConfigMap;
+import io.github.liana.internal.ImmutableConfigSet;
+import io.github.liana.internal.LinkedConfigMap;
+import io.github.liana.internal.LinkedConfigSet;
+import io.github.liana.internal.StringUtils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static io.github.liana.config.ConfigDefaults.PROVIDER;
-import static io.github.liana.util.MapUtils.toMap;
+import static io.github.liana.internal.MapUtils.toMap;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -56,6 +56,7 @@ public class ConfigResourceLocation {
     private final ImmutableConfigSet resourceNames;
     private final ImmutableConfigMap variables;
     private final ImmutableConfigMap credentials;
+    private final boolean verboseLogging;
 
     /**
      * Constructs a new {@code ConfigResourceLocation} instance.
@@ -65,11 +66,17 @@ public class ConfigResourceLocation {
      * @param variables     an immutable map of variables used for configuration
      * @param credentials   an immutable map of credentials used for authentication
      */
-    public ConfigResourceLocation(String provider, ImmutableConfigSet resourceNames, ImmutableConfigMap variables, ImmutableConfigMap credentials) {
+    public ConfigResourceLocation(String provider,
+                                  ImmutableConfigSet resourceNames,
+                                  ImmutableConfigMap variables,
+                                  ImmutableConfigMap credentials,
+                                  boolean verboseLogging
+    ) {
         this.provider = provider;
         this.resourceNames = resourceNames;
         this.variables = variables;
         this.credentials = credentials;
+        this.verboseLogging = verboseLogging;
     }
 
     /**
@@ -108,6 +115,10 @@ public class ConfigResourceLocation {
         return variables;
     }
 
+    public boolean isVerboseLogging() {
+        return verboseLogging;
+    }
+
     /**
      * Returns a new {@link Builder} instance for constructing a {@link ConfigResourceLocation}.
      *
@@ -126,6 +137,7 @@ public class ConfigResourceLocation {
         private final Set<String> resourceNames = new LinkedConfigSet();
         private final Map<String, String> variables = new LinkedConfigMap();
         private final Map<String, String> credentials = new LinkedConfigMap();
+        private boolean verboseLogging;
 
         /**
          * Sets the provider for this configuration location.
@@ -160,7 +172,7 @@ public class ConfigResourceLocation {
         public Builder addResources(String... resources) {
             requireNonNull(resources, RESOURCES_MUST_NOT_BE_NULL);
 
-            return addResourceList(Arrays.asList(resources));
+            return addResourceFromList(Arrays.asList(resources));
         }
 
         /**
@@ -170,7 +182,7 @@ public class ConfigResourceLocation {
          * @return this builder instance for chaining
          * @throws NullPointerException if {@code resources} is null
          */
-        public Builder addResourceList(List<String> resources) {
+        public Builder addResourceFromList(List<String> resources) {
             requireNonNull(resources, RESOURCES_MUST_NOT_BE_NULL);
             resourceNames.addAll(resources);
 
@@ -208,7 +220,7 @@ public class ConfigResourceLocation {
             requireNonNull(variables, VARIABLES_MUST_NOT_BE_NULL);
 
             try {
-                return addVariablesMap(toMap(variables));
+                return addVariablesFromMap(toMap(variables));
             } catch (IllegalArgumentException ex) {
                 throw new InvalidConfigVariablesException(ex.getMessage());
             }
@@ -222,7 +234,7 @@ public class ConfigResourceLocation {
          * @throws NullPointerException            if {@code variables} is null
          * @throws InvalidConfigVariablesException if variables are invalid (e.g., keys conflict)
          */
-        public Builder addVariablesMap(Map<String, String> variables) {
+        public Builder addVariablesFromMap(Map<String, String> variables) {
             requireNonNull(variables, VARIABLES_MUST_NOT_BE_NULL);
 
             try {
@@ -265,7 +277,7 @@ public class ConfigResourceLocation {
             requireNonNull(credentials, CREDENTIALS_MUST_NOT_BE_NULL);
 
             try {
-                return addCredentialsMap(toMap(credentials));
+                return addCredentialsFromMap(toMap(credentials));
             } catch (IllegalArgumentException ex) {
                 throw new InvalidConfigCredentialsException(ex.getMessage());
             }
@@ -279,7 +291,7 @@ public class ConfigResourceLocation {
          * @throws NullPointerException              if {@code credentials} is null
          * @throws InvalidConfigCredentialsException if credentials are invalid (e.g., keys conflict)
          */
-        public Builder addCredentialsMap(Map<String, String> credentials) {
+        public Builder addCredentialsFromMap(Map<String, String> credentials) {
             requireNonNull(credentials, CREDENTIALS_MUST_NOT_BE_NULL);
 
             try {
@@ -287,6 +299,12 @@ public class ConfigResourceLocation {
             } catch (IllegalArgumentException ex) {
                 throw new InvalidConfigCredentialsException(ex.getMessage());
             }
+
+            return this;
+        }
+
+        public Builder verboseLogging(boolean verboseLogging) {
+            this.verboseLogging = verboseLogging;
 
             return this;
         }
@@ -301,7 +319,8 @@ public class ConfigResourceLocation {
                     StringUtils.defaultIfBlank(provider, PROVIDER),
                     ImmutableConfigSet.of(resourceNames),
                     ImmutableConfigMap.of(variables),
-                    ImmutableConfigMap.of(credentials)
+                    ImmutableConfigMap.of(credentials),
+                    verboseLogging
             );
         }
     }

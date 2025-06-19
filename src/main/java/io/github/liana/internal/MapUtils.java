@@ -1,4 +1,4 @@
-package io.github.liana.util;
+package io.github.liana.internal;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

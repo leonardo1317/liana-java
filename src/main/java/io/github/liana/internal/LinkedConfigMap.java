@@ -1,11 +1,11 @@
-package io.github.liana.util;
+package io.github.liana.internal;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static io.github.liana.util.StringUtils.isBlank;
+import static io.github.liana.internal.StringUtils.isBlank;
 import static java.util.Objects.requireNonNull;
 
 /**

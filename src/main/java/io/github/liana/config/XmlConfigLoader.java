@@ -1,9 +1,6 @@
 package io.github.liana.config;
 
 import io.github.liana.config.exception.ConfigLoaderException;
-import org.apache.commons.configuration2.XMLConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.configuration2.io.FileHandler;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,20 +29,17 @@ final class XmlConfigLoader implements ConfigLoader {
      * Loads and parses an XML configuration resource.
      *
      * @param resource The configuration resource to load (must not be null).
-     * @return A {@link ConfigWrapper} with the parsed configuration.
+     * @return A {@link Configuration} with the parsed configuration.
      * Loads and parses an XML configuration resource.
      * @throws NullPointerException  If {@code resource} or any of its required fields (input stream, resource name) are null.
      * @throws ConfigLoaderException if the resource is invalid or the XML is malformed.
      */
     @Override
-    public ConfigWrapper load(ConfigResource resource) {
+    public Configuration load(ConfigResource resource) {
         validateResource(resource);
         try (InputStream input = resource.getInputStream()) {
-            XMLConfiguration config = new XMLConfiguration();
-            FileHandler handler = new FileHandler(config);
-            handler.load(input);
-            return new ConfigWrapper(config);
-        } catch (ConfigurationException | IOException ex) {
+            return new XmlConfiguration(input);
+        } catch (IOException ex) {
             throw new ConfigLoaderException("Error loading Xml config from " + resource.getResourceName(), ex);
         }
     }

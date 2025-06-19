@@ -1,9 +1,9 @@
-package io.github.liana.util;
+package io.github.liana.internal;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;
 
-import static io.github.liana.util.StringUtils.isBlank;
+import static io.github.liana.internal.StringUtils.isBlank;
 import static java.util.Objects.requireNonNull;
 
 /**

@@ -1,10 +1,10 @@
-package io.github.liana.util;
+package io.github.liana.internal;
 
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Set;
 
-public final class ImmutableConfigSet {
+public class ImmutableConfigSet {
     private final Set<String> set;
 
     private ImmutableConfigSet(Set<String> set) {

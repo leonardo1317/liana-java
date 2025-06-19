@@ -1,28 +1,124 @@
 package io.github.liana.config;
 
+import io.github.liana.config.exception.MissingConfigException;
+
 import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface ConfigReader {
-    String getString(String key);
 
-    int getInt(String key);
+    default int getInt(String key) {
+        return getOrThrow(key, Integer.class);
+    }
 
-    long getLong(String key);
+    default int getInt(String key, int defaultValue) {
+        return get(key, Integer.class).orElse(defaultValue);
+    }
 
-    boolean getBoolean(String key);
+    default long getLong(String key) {
+        return getOrThrow(key, Long.class);
+    }
 
-    float getFloat(String key);
+    default long getLong(String key, long defaultValue) {
+        return get(key, Long.class).orElse(defaultValue);
+    }
 
-    double getDouble(String key);
+    default boolean getBoolean(String key) {
+        return getOrThrow(key, Boolean.class);
+    }
 
-    Duration getDuration(String key);
+    default boolean getBoolean(String key, boolean defaultValue) {
+        return get(key, Boolean.class).orElse(defaultValue);
+    }
 
-    String[] getStringArray(String key);
+    default float getFloat(String key) {
+        return getOrThrow(key, Float.class);
+    }
 
-    boolean has(String key);
+    default float getFloat(String key, float defaultValue) {
+        return get(key, Float.class).orElse(defaultValue);
+    }
 
-    <T> T getValue(String key, Class<T> clazz);
+    default double getDouble(String key) {
+        return getOrThrow(key, Double.class);
+    }
 
-    Map<String, Object> getAllSettings();
+    default double getDouble(String key, double defaultValue) {
+        return get(key, Double.class).orElse(defaultValue);
+    }
+
+    default String getString(String key) {
+        return getOrThrow(key, String.class);
+    }
+
+    default String getString(String key, String defaultValue) {
+        return get(key, String.class).orElse(defaultValue);
+    }
+
+    default Duration getDuration(String key) {
+        return getOrThrow(key, Duration.class);
+    }
+
+    default Duration getDuration(String key, Duration defaultValue) {
+        return get(key, Duration.class).orElse(defaultValue);
+    }
+
+    boolean hasKey(String key);
+
+    <T> Optional<T> get(String key, Class<T> clazz);
+
+    <T> Optional<T> get(String key, TypeOf<T> typeRef);
+
+    default <T> T getOrThrow(String key, Class<T> clazz) {
+        return get(key, clazz)
+                .orElseThrow(() -> new MissingConfigException("Missing required config: " + key));
+    }
+
+    default <T> T getOrThrow(String key, TypeOf<T> typeRef) {
+        return get(key, typeRef)
+                .orElseThrow(() -> new MissingConfigException("Missing required config: " + key));
+    }
+
+    default <E> List<E> getList(String key, Class<E> clazz) {
+        return getList(key, clazz, Collections.emptyList());
+    }
+
+    <E> List<E> getList(String key, Class<E> clazz, List<E> defaultValue);
+
+    default <V> Map<String, V> getMap(String key, Class<V> clazz) {
+        return getMap(key, clazz, Collections.emptyMap());
+    }
+
+    <V> Map<String, V> getMap(String key, Class<V> clazz, Map<String, V> defaultValue);
+
+    default List<String> getStringList(String key) {
+        return getList(key, String.class);
+    }
+
+    default List<String> getStringList(String key, List<String> defaultValue) {
+        return getList(key, String.class, defaultValue);
+    }
+
+    default String[] getStringArray(String key) {
+        return getOrThrow(key, new TypeOf<>() {});
+    }
+
+    default String[] getStringArray(String key, String[] defaultValue) {
+        return get(key, new TypeOf<String[]>() {}).orElse(defaultValue);
+    }
+
+    default Map<String, String> getStringMap(String key) {
+        return getMap(key, String.class);
+    }
+
+    default Map<String, String> getStringMap(String key, Map<String, String> defaultValue) {
+        return getMap(key, String.class, defaultValue);
+    }
+
+    Map<String, Object> getAllConfig();
+
+    <T> Optional<T> getAllConfigAs(Class<T> clazz);
 }

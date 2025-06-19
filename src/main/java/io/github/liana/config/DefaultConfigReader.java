@@ -1,67 +1,66 @@
 package io.github.liana.config;
 
-import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import static io.github.liana.internal.StringUtils.requireNonBlank;
+import static java.util.Objects.requireNonNull;
 
 class DefaultConfigReader implements ConfigReader {
-    private final ConfigWrapper config;
+    private final Configuration config;
 
-    public DefaultConfigReader(ConfigWrapper configuration) {
-        this.config = configuration;
+    public DefaultConfigReader(Configuration config) {
+        this.config = requireNonNull(config, "Configuration must not be null");
     }
 
     @Override
-    public String getString(String key) {
-        return getValue(key, String.class);
+    public Map<String, Object> getAllConfig() {
+        return Collections.unmodifiableMap(config.getAllConfig());
     }
 
     @Override
-    public int getInt(String key) {
-        return getValue(key, Integer.class);
+    public <T> Optional<T> getAllConfigAs(Class<T> clazz) {
+        return config.getAllConfigAs(clazz);
     }
 
     @Override
-    public long getLong(String key) {
-        return getValue(key, Long.class);
+    public boolean hasKey(String key) {
+        return config.hasKey(key);
     }
 
     @Override
-    public boolean getBoolean(String key) {
-        return getValue(key, Boolean.class);
+    public <T> Optional<T> get(String key, Class<T> clazz) {
+        validateKeyAndType(key, clazz);
+        return config.get(key, clazz);
     }
 
     @Override
-    public float getFloat(String key) {
-        return getValue(key, Float.class);
+    public <T> Optional<T> get(String key, TypeOf<T> type) {
+        requireNonBlank(key, "key must not be blank");
+        requireNonNull(type, "type must not be null");
+        return config.get(key, type.getType());
     }
 
     @Override
-    public double getDouble(String key) {
-        return getValue(key, Double.class);
+    public <E> List<E> getList(String key, Class<E> clazz, List<E> defaultValue) {
+        validateKeyAndType(key, clazz);
+        requireNonNull(defaultValue, "defaultValue must not be blank");
+        List<E> list = config.getList(key, clazz);
+        return list.isEmpty() ? defaultValue : list;
     }
 
     @Override
-    public Duration getDuration(String key) {
-        return getValue(key, Duration.class);
+    public <V> Map<String, V> getMap(String key, Class<V> clazz, Map<String, V> defaultValue) {
+        validateKeyAndType(key, clazz);
+        requireNonNull(defaultValue, "defaultValue must not be blank");
+        Map<String, V> map = config.getMap(key, clazz);
+        return map.isEmpty() ? defaultValue : map;
     }
 
-    @Override
-    public String[] getStringArray(String key) {
-        return getValue(key, String[].class);
-    }
-
-    @Override
-    public Map<String, Object> getAllSettings() {
-        return config.getAllSettings();
-    }
-
-    @Override
-    public boolean has(String key) {
-        return config.has(key);
-    }
-
-    @Override
-    public <T> T getValue(String key, Class<T> clazz) {
-        return config.getValue(key, clazz, null);
+    private void validateKeyAndType(String key, Class<?> clazz) {
+        requireNonBlank(key, "key must not be blank");
+        requireNonNull(clazz, "Type must not be null");
     }
 }

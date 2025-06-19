@@ -1,6 +1,4 @@
-package io.github.liana.util;
-
-import org.apache.commons.text.StringSubstitutor;
+package io.github.liana.internal;
 
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -19,7 +17,7 @@ public final class PlaceholderUtils {
     private PlaceholderUtils() {
     }
 
-    public static <V> Optional<String> replaceIfAllPresent(String pattern, Map<String, V> valueMap) {
+    public static <V> Optional<String> replaceIfAllPresent(String pattern, Map<String, V> variableMap) {
         if (pattern.isBlank()) {
             return Optional.empty();
         }
@@ -30,14 +28,24 @@ public final class PlaceholderUtils {
         }
 
         boolean allPlaceholdersValid = requiredPlaceholders.stream()
-                .allMatch(valueMap::containsKey);
+                .allMatch(variableMap::containsKey);
 
-        return allPlaceholdersValid ? Optional.of(replace(pattern, valueMap)) : Optional.empty();
+        return allPlaceholdersValid ? Optional.of(replace(pattern, variableMap)) : Optional.empty();
     }
 
-    public static <V> String replace(String pattern, Map<String, V> valueMap) {
 
-        return StringSubstitutor.replace(pattern, valueMap, DEFAULT_PREFIX, DEFAULT_SUFFIX);
+    public static <V> String replace(String pattern, Map<String, V> valueMap) {
+        Matcher matcher = PATTERN.matcher(pattern);
+        StringBuilder result = new StringBuilder();
+
+        while (matcher.find()) {
+            String key = matcher.group(1);
+            Object replacement = valueMap.get(key);
+            String replacementStr = replacement != null ? replacement.toString() : matcher.group(0);
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacementStr));
+        }
+        matcher.appendTail(result);
+        return result.toString();
     }
 
     public static Set<String> extractPlaceholders(String pattern) {

@@ -1,13 +1,13 @@
 package io.github.liana.config;
 
-import io.github.liana.util.ImmutableConfigMap;
+import io.github.liana.internal.ImmutableConfigMap;
 
-public class ResolvedConfigResource {
+public class ConfigResourceReference {
     private final String provider;
     private final String resourceName;
     private final ImmutableConfigMap credentials;
 
-    public ResolvedConfigResource(String provider, String resourceName, ImmutableConfigMap credentials) {
+    public ConfigResourceReference(String provider, String resourceName, ImmutableConfigMap credentials) {
         this.provider = provider;
         this.resourceName = resourceName;
         this.credentials = credentials;
@@ -27,7 +27,7 @@ public class ResolvedConfigResource {
 
     @Override
     public String toString() {
-        return "ResolvedConfigResource{" +
+        return "ConfigResourceReference{" +
                 "provider='" + provider + '\'' +
                 ", resourceName='" + resourceName + '\'' +
                 ", credentials=" + credentials +

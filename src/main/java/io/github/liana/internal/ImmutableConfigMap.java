@@ -1,4 +1,4 @@
-package io.github.liana.util;
+package io.github.liana.internal;
 
 import java.util.Collections;
 import java.util.Map;
@@ -21,7 +21,7 @@ import static java.util.Objects.requireNonNull;
  *     <li>{@link #of(Map)} to wrap an existing map</li>
  * </ul>
  */
-public final class ImmutableConfigMap {
+public class ImmutableConfigMap {
     private final Map<String, String> map;
 
     /**

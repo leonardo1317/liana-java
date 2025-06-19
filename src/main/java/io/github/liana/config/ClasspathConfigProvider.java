@@ -32,7 +32,7 @@ final class ClasspathConfigProvider implements ConfigProvider {
      * @implNote The caller is responsible for closing the returned resource's input stream
      */
     @Override
-    public ConfigResource resolveResource(ResolvedConfigResource resource) {
+    public ConfigResource resolveResource(ConfigResourceReference resource) {
         validateResource(resource);
         InputStream input = ClasspathResource.getResourceAsStream(resource.getResourceName());
         if (input == null) {

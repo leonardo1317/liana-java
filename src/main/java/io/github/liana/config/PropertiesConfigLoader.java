@@ -1,13 +1,9 @@
 package io.github.liana.config;
 
 import io.github.liana.config.exception.ConfigLoaderException;
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 import static io.github.liana.config.ConfigFileFormat.PROPERTIES;
 
@@ -33,19 +29,17 @@ final class PropertiesConfigLoader implements ConfigLoader {
      * Loads and parses a Properties configuration resource.
      *
      * @param resource The configuration resource to load (must not be null).
-     * @return A {@link ConfigWrapper} with the parsed configuration.
+     * @return A {@link Configuration} with the parsed configuration.
      * Loads and parses a Properties configuration resource.
      * @throws NullPointerException  If {@code resource} or any of its required fields (input stream, resource name) are null.
      * @throws ConfigLoaderException if the resource is invalid or the Properties is malformed.
      */
     @Override
-    public ConfigWrapper load(ConfigResource resource) {
+    public Configuration load(ConfigResource resource) {
         validateResource(resource);
         try (InputStream input = resource.getInputStream()) {
-            PropertiesConfiguration config = new PropertiesConfiguration();
-            config.read(new InputStreamReader(input, StandardCharsets.UTF_8));
-            return new ConfigWrapper(config);
-        } catch (IOException | ConfigurationException ex) {
+            return new PropertiesConfiguration(input);
+        } catch (IOException ex) {
             throw new ConfigLoaderException("Error loading Properties config from " + resource.getResourceName(), ex);
         }
     }

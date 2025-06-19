@@ -21,14 +21,14 @@ public interface ConfigProvider {
      * @throws ConfigProviderException if resource can't be resolved
      * @throws NullPointerException    if resource is null
      */
-    ConfigResource resolveResource(ResolvedConfigResource resource);
+    ConfigResource resolveResource(ConfigResourceReference resource);
 
     /**
      * Validates basic resource requirements.
      * Default checks: non-null resource and resource name.
      */
-    default void validateResource(ResolvedConfigResource resource) {
-        requireNonNull(resource, ResolvedConfigResource.class.getSimpleName() + " must not be null");
+    default void validateResource(ConfigResourceReference resource) {
+        requireNonNull(resource, "ConfigResourceReference must not be null");
         requireNonNull(resource.getResourceName(), "ResourceNames must not be null");
     }
 }
