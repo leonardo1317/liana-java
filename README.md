@@ -1,6 +1,6 @@
 <img src="liana-logo-transparent.png" alt="Liana Logo" width="300"/>
 
-# Liana Configuration Library
+# Liana Configuration
 
 &#x20;
 
@@ -8,9 +8,9 @@
 
 ## Overview
 
-**Liana** is a lightweight, framework-agnostic Java configuration library designed for simplicity and flexibility. Inspired by the liana plant that adapts to any structure, Liana adapts to your application's needs—**not the other way around**.
+**Liana** is a lightweight, framework agnostic Java configuration library designed for simplicity and flexibility. Inspired by the liana plant that adapts to any structure, Liana adapts to your application's needs not the other way around.
 
-Liana abstracts configuration complexity and offers a unified API to load configurations from [supported formats](#supported-formats)—without forcing the use of heavyweight frameworks.
+Liana abstracts configuration complexity and offers a unified API to load configurations from [supported formats](#supported-formats) without forcing the use of heavyweight frameworks.
 
 ---
 
@@ -42,7 +42,8 @@ Liana provides essential configuration capabilities designed for flexibility and
 
 - **Multi-format support**: Load and merge multiple configuration files in [supported formats](#supported-formats).
 - **Ordered overrides**: Later-loaded files override earlier ones for environment-specific layering.
-- **Custom placeholder resolution**: Replace placeholders (e.g., `${profile}`) dynamically with user-defined variables.
+- **Custom placeholder resolution**: Replace placeholders (e.g., `${profile}` or `${profile:default}`) dynamically using variable maps.
+- **Deep interpolation**: Automatically interpolates placeholder variables across all textual nodes in nested structures.
 - **Variable injection**: Inject variables via fluent API or programmatically.
 - **Type-safe access**: Retrieve config as `String`, `int`, `boolean`, lists, maps, arrays, or POJOs.
 - **POJO and generic mapping**: Deserialize config sections into POJOs or generic structures using `TypeOf<T>`. POJO fields should be private with public getters and setters.
@@ -61,7 +62,7 @@ Liana provides essential configuration capabilities designed for flexibility and
 <dependency>
   <groupId>io.github.liana</groupId>
   <artifactId>liana-config</artifactId>
-  <version>1.0.0</version>
+  <version>0.1.0</version>
 </dependency>
 ```
 
@@ -69,19 +70,19 @@ Liana provides essential configuration capabilities designed for flexibility and
 
 ```groovy
 dependencies {
-  implementation 'io.github.liana:liana-config:1.0.0'
+  implementation 'io.github.liana:liana-config:0.1.0'
 }
 ```
 
 ---
 
-## Quick Start Example
+## Quick Start
 
 ### Define your configuration source:
 
 ```java
 ConfigResourceLocation location = ConfigResourceLocation.builder()
-    .addResources("application.properties", "application-${profile}.yaml")
+    .addResources("application.yaml", "application-${profile}.yaml")
     .addVariables("profile", "dev")
     .verboseLogging(true) // optional, default is false. Enables detailed logs of the loading process.
     .build();
@@ -107,6 +108,8 @@ This means Liana will search the classpath for:
 2. A file matching the pattern `application-${profile}` (with `${profile}` resolved from the environment variable `LIANA_PROFILE`).
 
 If `LIANA_PROFILE` is **not set**, Liana uses the default profile value: **default**.
+
+The placeholder system supports the `${key}` and `${key:default}` syntax. Placeholders can be resolved using variables provided through `.addVariables(...)` or `.addVariablesFromMap(...)`, and placeholders inside values are deeply interpolated across the full configuration structure.
 
 ### Example configuration files (per format):
 
@@ -170,28 +173,48 @@ servers:
 
 ```java
 public class AppConfig {
-    private String name;
+  private String name;
 
-    // Getters and Setters omitted for brevity
+  public String getName() {
+    return name;
+  }
+
+  public void setName(String name) {
+    this.name = name;
+  }
 }
 
 public class ServerConfig {
-    private String host;
-    private int port;
+  private String host;
+  private int port;
 
-    // Getters and Setters omitted for brevity
+  public String getHost() {
+    return host;
+  }
+
+  public void setHost(String host) {
+    this.host = host;
+  }
+
+  public int getPort() {
+    return port;
+  }
+
+  public void setPort(int port) {
+    this.port = port;
+  }
 }
 ```
 
 ### Load and read configuration:
 
 ```java
-ConfigReader reader = ConfigFactory.load(location);
+ConfigReader reader = LianaConfig.getInstance().load(location);
 String appName = reader.getString("app.name", "DefaultApp");
 int port = reader.getInt("server.port", 8080);
 ```
 
-### Load as POJO (Example):
+### Load as POJO:
 
 ```java
 AppConfig config = reader.get("app", AppConfig.class, new AppConfig());
@@ -201,6 +224,9 @@ List<ServerConfig> servers = reader.get("servers", new TypeOf<List<ServerConfig>
 ### Optional Variants:
 
 ```java
+Optional<String> optionalAppName = reader.get("app.name", String.class);
+Optional<Integer> optionalPort = reader.get("server.port", Integer.class);
+
 Optional<AppConfig> optionalConfig = reader.get("app", AppConfig.class);
 Optional<List<ServerConfig>> optionalServers = reader.get("servers", new TypeOf<List<ServerConfig>>() {});
 ```
@@ -215,13 +241,13 @@ Liana enforces strict validation for file names to ensure security and compatibi
 
 ### Allowed File Name Rules
 
-| Rule                                                                                 | Description                                                             |
-| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
-| Must not contain `..` or `../`                                                       | Prevents directory traversal attacks                                    |
-| Must not be blank, exceed 255 characters, or contain `%`                             | Ensures filename validity                                               |
-| Must not start or end with `.` or contain spaces                                     | Enforces consistency and cross-platform support                         |
-| Must match the regex pattern: `^[a-zA-Z0-9_\-]+(?:/[a-zA-Z0-9_\-]+)*\.[a-zA-Z0-9]+$` | Enforces safe character usage and structure                             |
-| Must have a supported extension                                                      | Only files ending in [supported formats](#supported-formats) extensions |
+| Rule                                                          | Description                                                    |
+| ------------------------------------------------------------- | -------------------------------------------------------------- |
+| Must not be blank                                             | Prevents empty names                                           |
+| Must not contain `..` or `../`                                | Prevents directory traversal                                   |
+| Must not start with `..`                                      | Ensures safe directory targeting                               |
+| Must normalize to a valid path                                | Path must resolve without invalid segments                     |
+| Must end with a valid extension from [supported formats](#supported-formats) | Enforces compatible configuration file types    |
 
 ### Builder Methods
 
@@ -293,7 +319,7 @@ The following table documents all available methods in the `ConfigReader` API:
 
 ```plaintext
 Configuration load completed: loaded=2, failed=1 (total=3)
-Loaded: application.properties, application-dev.yaml
+Loaded: application.yaml, application-dev.yaml
 Failed: missing-config.yaml (not found)
 ```
 

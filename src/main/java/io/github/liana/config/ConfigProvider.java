@@ -1,8 +1,8 @@
 package io.github.liana.config;
 
-import io.github.liana.config.exception.ConfigProviderException;
-
 import static java.util.Objects.requireNonNull;
+
+import io.github.liana.config.exception.ConfigProviderException;
 
 /**
  * Provides configuration resources from different sources. Implementations handle specific

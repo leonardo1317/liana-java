@@ -1,34 +1,22 @@
 package io.github.liana.config;
 
+import io.github.liana.internal.FilenameUtils;
 import io.github.liana.internal.StringUtils;
-import org.apache.commons.io.FilenameUtils;
 import java.util.Locale;
 
 final class FilenameValidator {
 
-  private static final String REGEX_SAFE_RESOURCE_NAME =
-      "^(?!.*\\.\\.)[a-zA-Z0-9_\\-]+(?:/[a-zA-Z0-9_\\-]+)*\\.[a-zA-Z0-9]+$";
-
   public static boolean isSafeResourceName(String resourceName) {
-    if (StringUtils.isBlank(resourceName) ||
-        resourceName.length() > 255 || resourceName.contains("%")) {
+    if (StringUtils.isBlank(resourceName)) {
       return false;
     }
 
-    String cleanResourceName = FilenameUtils.normalize(resourceName, true);
-    if (cleanResourceName == null || cleanResourceName.startsWith("..")
-        || cleanResourceName.contains("../")) {
+    String cleanResourceName = FilenameUtils.normalize(resourceName);
+    if (cleanResourceName.startsWith("..") || cleanResourceName.contains("../")) {
       return false;
     }
 
     String fileName = FilenameUtils.getName(cleanResourceName);
-    if (fileName.startsWith(".") || fileName.endsWith(".") || fileName.contains(" ")) {
-      return false;
-    }
-
-    if (!cleanResourceName.matches(REGEX_SAFE_RESOURCE_NAME)) {
-      return false;
-    }
 
     String extension = FilenameUtils.getExtension(fileName).toLowerCase(Locale.ROOT);
     return ConfigFileFormat.getAllSupportedExtensions().contains(extension);

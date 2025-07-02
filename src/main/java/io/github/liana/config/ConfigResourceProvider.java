@@ -1,12 +1,11 @@
 package io.github.liana.config;
 
-import io.github.liana.config.exception.ConfigProviderException;
-
-import java.util.List;
-
 import static io.github.liana.internal.StringUtils.equalsIgnoreCase;
 import static io.github.liana.internal.StringUtils.requireNonBlank;
 import static java.util.Objects.requireNonNull;
+
+import io.github.liana.config.exception.ConfigProviderException;
+import java.util.List;
 
 class ConfigResourceProvider {
 

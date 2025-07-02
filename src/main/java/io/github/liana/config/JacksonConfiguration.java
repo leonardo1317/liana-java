@@ -1,13 +1,12 @@
 package io.github.liana.config;
 
+import static java.util.Objects.requireNonNull;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
-
-import static java.util.Objects.requireNonNull;
 
 final class JacksonConfiguration extends AbstractConfiguration {
 

@@ -1,12 +1,17 @@
 /**
  * Copyright 2025 Leonardo Favio Romero Silva
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
- * <p>
- * <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache-2.0</a>
+ *
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * <p><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache-2.0</a>
  */
+
 package io.github.liana.config;
+
+import static io.github.liana.config.ConfigDefaults.PROVIDER;
+import static io.github.liana.internal.MapUtils.toMap;
+import static java.util.Objects.requireNonNull;
 
 import io.github.liana.config.exception.InvalidConfigCredentialsException;
 import io.github.liana.config.exception.InvalidConfigVariablesException;
@@ -15,26 +20,21 @@ import io.github.liana.internal.ImmutableConfigSet;
 import io.github.liana.internal.LinkedConfigMap;
 import io.github.liana.internal.LinkedConfigSet;
 import io.github.liana.internal.StringUtils;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static io.github.liana.config.ConfigDefaults.PROVIDER;
-import static io.github.liana.internal.MapUtils.toMap;
-import static java.util.Objects.requireNonNull;
-
 /**
- * Represents a configuration resource location, including its provider, resource names,
- * variables, and credentials.
- * <p>
- * This class is typically built using its nested {@link Builder}, allowing clients
- * to fluently configure where and how to load configuration resources (e.g., from classpath,
- * S3, Azure Blob, etc.).
- * <p>
- * Resource names are maintained in insertion order and de-duplicated.
- * Variables and credentials are stored securely in {@link LinkedConfigMap} instances.
+ * Represents a configuration resource location, including its provider, resource names, variables,
+ * and credentials.
+ *
+ * <p>This class is typically built using its nested {@link Builder}, allowing clients to fluently
+ * configure where and how to load configuration resources (e.g., from classpath, S3, Azure Blob,
+ * etc.).
+ *
+ * <p>Resource names are maintained in insertion order and de-duplicated. Variables and credentials
+ * are stored securely in {@link LinkedConfigMap} instances.
  *
  * <p>Example usage:
  * <pre>{@code
@@ -129,8 +129,8 @@ public class ConfigResourceLocation {
   }
 
   /**
-   * Builder class for creating instances of {@link ConfigResourceLocation}.
-   * Allows for fluent, step-by-step configuration of resource location details.
+   * Builder class for creating instances of {@link ConfigResourceLocation}. Allows for fluent,
+   * step-by-step configuration of resource location details.
    */
   public static class Builder {
 
@@ -209,8 +209,8 @@ public class ConfigResourceLocation {
     }
 
     /**
-     * Adds multiple variable key-value pairs to the configuration.
-     * The variables are provided as an array of alternating keys and values.
+     * Adds multiple variable key-value pairs to the configuration. The variables are provided as an
+     * array of alternating keys and values.
      *
      * @param variables array of alternating keys and values
      * @return this builder instance for chaining
@@ -266,8 +266,8 @@ public class ConfigResourceLocation {
     }
 
     /**
-     * Adds multiple credential key-value pairs to the configuration.
-     * The credentials are provided as an array of alternating keys and values.
+     * Adds multiple credential key-value pairs to the configuration. The credentials are provided
+     * as an array of alternating keys and values.
      *
      * @param credentials array of alternating keys and values
      * @return this builder instance for chaining
@@ -304,6 +304,12 @@ public class ConfigResourceLocation {
       return this;
     }
 
+    /**
+     * Enables or disables verbose logging during the configuration loading process.
+     *
+     * @param verboseLogging {@code true} to enable verbose logging; {@code false} to disable it
+     * @return this builder instance for method chaining
+     */
     public Builder verboseLogging(boolean verboseLogging) {
       this.verboseLogging = verboseLogging;
 

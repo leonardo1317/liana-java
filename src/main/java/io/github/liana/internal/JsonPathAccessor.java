@@ -1,19 +1,18 @@
 package io.github.liana.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.liana.config.ObjectMapperProvider;
 import io.github.liana.config.exception.ConversionException;
-
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-
-import static java.util.Objects.requireNonNull;
 
 public final class JsonPathAccessor {
 

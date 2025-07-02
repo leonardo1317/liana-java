@@ -22,9 +22,9 @@ public class ConfigResource {
 
   @Override
   public String toString() {
-    return "ConfigResource{" +
-        "resourceName='" + resourceName + '\'' +
-        ", inputStream=" + inputStream +
-        '}';
+    return "ConfigResource{"
+        + "resourceName='" + resourceName + '\''
+        + ", inputStream=" + inputStream
+        + '}';
   }
 }

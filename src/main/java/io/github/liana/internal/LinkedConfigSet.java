@@ -1,13 +1,14 @@
 package io.github.liana.internal;
 
-import java.util.Collection;
-import java.util.LinkedHashSet;
-
 import static io.github.liana.internal.StringUtils.isBlank;
 import static java.util.Objects.requireNonNull;
 
+import java.util.Collection;
+import java.util.LinkedHashSet;
+
 /**
- * A specialized {@link LinkedHashSet} for configuration strings that:
+ * A specialized {@link LinkedHashSet} for storing configuration strings.
+ *
  * <ul>
  *     <li>Preserves insertion order</li>
  *     <li>Rejects blank or null strings</li>
@@ -36,9 +37,9 @@ public class LinkedConfigSet extends LinkedHashSet<String> {
 
   /**
    * Adds all non-blank strings from the given collection to the set.
-   * <p>
-   * Null or blank strings are ignored. The insertion order of elements in this set will follow the
-   * iteration order of the input collection. If the input collection does not guarantee a
+   *
+   * <p>Null or blank strings are ignored. The insertion order of elements in this set will follow
+   * the iteration order of the input collection. If the input collection does not guarantee a
    * consistent iteration order (e.g., {@link java.util.HashSet}), the resulting order in this set
    * may be unpredictable.
    *

@@ -1,17 +1,16 @@
 package io.github.liana.config;
 
+import static java.util.Objects.requireNonNull;
+
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * Captures and preserves generic type information at runtime.
- * <p>
- * This abstract class allows retrieval of the generic type parameter {@code T} by subclassing via
- * anonymous class instantiation. This approach overcomes Java's type erasure limitation at
+ *
+ * <p>This abstract class allows retrieval of the generic type parameter {@code T} by subclassing
+ * via anonymous class instantiation. This approach overcomes Java's type erasure limitation at
  * runtime.
- * </p>
  *
  * <pre>{@code
  * TypeOf<List<String>> type = new TypeOf<List<String>>() {};
@@ -26,10 +25,10 @@ public abstract class TypeOf<T> {
 
   /**
    * Constructs a new {@code TypeOf} instance and captures the generic type parameter.
-   * <p>
-   * This constructor must be invoked via an anonymous class to properly capture the type parameter.
+   *
+   * <p>This constructor must be invoked via an anonymous class to properly capture the type
+   * parameter.
    * Direct subclassing without specifying the generic type will result in an exception.
-   * </p>
    *
    * @throws IllegalArgumentException if the class is not properly parameterized as an anonymous
    *                                  class with a concrete type.

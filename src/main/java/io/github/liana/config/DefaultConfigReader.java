@@ -1,12 +1,12 @@
 package io.github.liana.config;
 
+import static io.github.liana.internal.StringUtils.requireNonBlank;
+import static java.util.Objects.requireNonNull;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import static io.github.liana.internal.StringUtils.requireNonBlank;
-import static java.util.Objects.requireNonNull;
 
 class DefaultConfigReader implements ConfigReader {
 

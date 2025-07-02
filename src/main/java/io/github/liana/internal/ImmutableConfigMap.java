@@ -1,19 +1,20 @@
 package io.github.liana.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * An immutable key-value configuration map that enforces read-only access.
- * <p>
- * This class wraps a {@link Map} and ensures that its content cannot be modified after creation.
+ *
+ * <p>This class wraps a {@link Map} and ensures that its content cannot be modified after
+ * creation.
  * Keys and values are strings, and access is restricted through a controlled API that validates
  * non-null keys.
- * <p>
- * It is commonly used to expose configuration data safely.
+ *
+ * <p>It is commonly used to expose configuration data safely.
  *
  * <p>Instances can be created via static factory methods:
  * <ul>
@@ -123,12 +124,12 @@ public class ImmutableConfigMap {
 
   @Override
   public boolean equals(Object o) {
-      if (this == o) {
-          return true;
-      }
-      if (!(o instanceof ImmutableConfigMap)) {
-          return false;
-      }
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof ImmutableConfigMap)) {
+      return false;
+    }
     ImmutableConfigMap that = (ImmutableConfigMap) o;
     return Objects.equals(map, that.map);
   }

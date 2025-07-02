@@ -29,10 +29,10 @@ public class ConfigResourceReference {
 
   @Override
   public String toString() {
-    return "ConfigResourceReference{" +
-        "provider='" + provider + '\'' +
-        ", resourceName='" + resourceName + '\'' +
-        ", credentials=" + credentials +
-        '}';
+    return "ConfigResourceReference{"
+        + "provider='" + provider + '\''
+        + ", resourceName='" + resourceName + '\''
+        + ", credentials=" + credentials
+        + '}';
   }
 }

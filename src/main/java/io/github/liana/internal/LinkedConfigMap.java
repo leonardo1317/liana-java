@@ -1,25 +1,26 @@
 package io.github.liana.internal;
 
+import static io.github.liana.internal.StringUtils.isBlank;
+import static java.util.Objects.requireNonNull;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static io.github.liana.internal.StringUtils.isBlank;
-import static java.util.Objects.requireNonNull;
-
 /**
- * A specialized {@link LinkedHashMap} for configuration data that validates keys and values before
- * insertion.
- * <p>
- * This map:
+ * A specialized {@link LinkedHashMap} for configuration entries with string keys and values
+ *
  * <ul>
  *   <li>Preserves insertion order.</li>
- *   <li>Ensures that all keys are non-blank (i.e., not {@code null} and not composed solely of whitespace).</li>
- *   <li>Ensures that all values are non-blank (i.e., not {@code null} and not composed solely of whitespace).</li>
+ *   <li>Ensures that all keys are non-blank (i.e., not {@code null}
+ *   and not composed solely of whitespace).</li>
+ *   <li>Ensures that all values are non-blank (i.e., not {@code null}
+ *   and not composed solely of whitespace).</li>
  * </ul>
- * <p>
- * Any attempt to insert or modify an entry with an invalid key or value will result in an {@link IllegalArgumentException}.
+ *
+ * <p>Any attempt to insert or modify an entry with an invalid key
+ * or value will result in an {@link IllegalArgumentException}.
  */
 public class LinkedConfigMap extends LinkedHashMap<String, String> {
 
@@ -32,8 +33,8 @@ public class LinkedConfigMap extends LinkedHashMap<String, String> {
 
   /**
    * Creates a {@code LinkedConfigMap} initialized with the entries from the given map.
-   * <p>
-   * This constructor delegates to {@link #putAll(Map)}, so:
+   *
+   * <p>This constructor delegates to {@link #putAll(Map)}, so:
    * <ul>
    *   <li>All entries in the provided map are validated before insertion.</li>
    *   <li>Insertion order of the entries is preserved.</li>
@@ -65,9 +66,9 @@ public class LinkedConfigMap extends LinkedHashMap<String, String> {
 
   /**
    * Copies all of the mappings from the specified map to this map after validating each entry.
-   * <p>
-   * The mappings are inserted in the order returned by the specified map's entry set iterator, thus
-   * preserving insertion order.
+   *
+   * <p>The mappings are inserted in the order returned by the specified map's entry set iterator,
+   * thus preserving insertion order.
    *
    * @param map mappings to be stored in this map.
    * @throws NullPointerException     if {@code map} is {@code null}.
@@ -162,8 +163,7 @@ public class LinkedConfigMap extends LinkedHashMap<String, String> {
    *
    * @param key             key with which the computed value is to be associated.
    * @param mappingFunction function to compute a value.
-   * @return the current (existing or computed) value associated with the key, or {@code null} if
-   * none.
+   * @return the existing or computed value for the key, or {@code null} if absent
    * @throws IllegalArgumentException if the key or computed value is invalid.
    */
   @Override

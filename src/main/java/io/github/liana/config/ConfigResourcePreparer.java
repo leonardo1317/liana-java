@@ -1,22 +1,13 @@
 /**
  * Copyright 2025 Leonardo Favio Romero Silva
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
- * <p>
- * <a href="http://www.apache.org/licenses/LICENSE-2.0">Apache-2.0</a>
+ *
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * <p><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache-2.0</a>
  */
+
 package io.github.liana.config;
-
-import io.github.liana.internal.ImmutableConfigMap;
-import io.github.liana.internal.ImmutableConfigSet;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static io.github.liana.config.ConfigDefaults.BASE_RESOURCE_NAME;
 import static io.github.liana.config.ConfigDefaults.BASE_RESOURCE_NAME_PATTERN;
@@ -24,23 +15,30 @@ import static io.github.liana.config.ConfigDefaults.DEFAULT_PROFILE;
 import static io.github.liana.config.ConfigDefaults.PROFILE_ENV_VAR;
 import static io.github.liana.config.ConfigDefaults.PROFILE_VAR;
 import static io.github.liana.config.ConfigDefaults.PROVIDER;
-import static io.github.liana.internal.PlaceholderUtils.replaceIfAllPresent;
+import static io.github.liana.internal.PlaceholderUtils.replaceIfAllResolvable;
 import static io.github.liana.internal.StringUtils.defaultIfBlank;
 import static java.util.Objects.requireNonNull;
 import static java.util.Objects.requireNonNullElse;
 
+import io.github.liana.internal.ImmutableConfigMap;
+import io.github.liana.internal.ImmutableConfigSet;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 /**
  * Responsible for preparing a list of configuration resources based on a given
  * {@link ConfigResourceLocation}.
- * <p>
- * This class resolves configuration files depending on the provider, profile, variables, and
+ *
+ * <p>This class resolves configuration files depending on the provider, profile, variables, and
  * resource names. It supports resolving default or custom resources using placeholders and
  * environment-based profiles.
- * </p>
- * <p>
- * Variable substitution is applied only if the resource name contains placeholders. If no
+ *
+ * <p>Variable substitution is applied only if the resource name contains placeholders. If no
  * placeholders are found in the resource name, the name is returned as-is without modification.
- * </p>
  */
 class ConfigResourcePreparer {
 
@@ -130,10 +128,9 @@ class ConfigResourcePreparer {
 
   /**
    * Resolves default resource names using variable substitution when applicable.
-   * <p>
-   * If the base pattern includes placeholders and all required variables are available, the name is
-   * resolved accordingly; otherwise, only static names are used.
-   * </p>
+   *
+   * <p>If the base pattern includes placeholders and all required variables are available, the
+   * name is resolved accordingly; otherwise, only static names are used.
    *
    * @param variableMap the map of variables for placeholder resolution
    * @return a list of valid and safe resource names found in the classpath
@@ -145,7 +142,7 @@ class ConfigResourcePreparer {
         .filter(FilenameValidator::isSafeResourceName)
         .ifPresent(processedNames::add);
 
-    replaceIfAllPresent(BASE_RESOURCE_NAME_PATTERN, variableMap)
+    replaceIfAllResolvable(BASE_RESOURCE_NAME_PATTERN, variableMap)
         .flatMap(this::findConfigResource)
         .filter(FilenameValidator::isSafeResourceName)
         .ifPresent(processedNames::add);
@@ -156,9 +153,8 @@ class ConfigResourcePreparer {
   /**
    * Resolves custom resource names from the given set, applying variable substitution only if
    * placeholders are present.
-   * <p>
-   * Resource names without placeholders are returned as-is.
-   * </p>
+   *
+   * <p>Resource names without placeholders are returned as-is.
    *
    * @param resourceNames the set of custom resource names
    * @param variableMap   the map of variables for substitution
@@ -167,7 +163,7 @@ class ConfigResourcePreparer {
   private List<String> resolveCustomResources(ImmutableConfigSet resourceNames,
       Map<String, String> variableMap) {
     return resourceNames.toSet().stream()
-        .map(name -> replaceIfAllPresent(name, variableMap))
+        .map(name -> replaceIfAllResolvable(name, variableMap))
         .flatMap(Optional::stream)
         .filter(FilenameValidator::isSafeResourceName)
         .collect(Collectors.toUnmodifiableList());

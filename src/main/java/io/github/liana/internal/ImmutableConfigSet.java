@@ -54,12 +54,12 @@ public class ImmutableConfigSet {
 
   @Override
   public boolean equals(Object o) {
-      if (this == o) {
-          return true;
-      }
-      if (!(o instanceof ImmutableConfigSet)) {
-          return false;
-      }
+    if (this == o) {
+      return true;
+    }
+    if (!(o instanceof ImmutableConfigSet)) {
+      return false;
+    }
     ImmutableConfigSet that = (ImmutableConfigSet) o;
     return Objects.equals(set, that.set);
   }
