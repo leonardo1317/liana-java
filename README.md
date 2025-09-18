@@ -324,10 +324,7 @@ Failed: missing-config.yaml (not found)
 
 ## Contributing
 
-1. Fork this repo
-2. Create your branch (`feature/my-feature`)
-3. Commit and push (`git commit -m 'Add feature'`)
-4. Open Pull Request
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
