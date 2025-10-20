@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mockConstruction;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mockStatic;
 
@@ -19,6 +20,7 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
+import org.mockito.MockedConstruction;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.HashSet;
@@ -52,13 +54,19 @@ class ConfigResourcePreparerTest {
     void shouldUseDefaultClasspathResourceAndDefaultProfile() {
       final String PROFILE = "default";
 
-      ConfigResourcePreparer preparer = new ConfigResourcePreparer(configResourceLocation);
+      try (MockedConstruction<ClasspathResource> ignored = mockConstruction(
+          ClasspathResource.class, (mock, context) -> {
+            when(mock.resourceExists(anyString())).thenReturn(true);
+            when(mock.getResourceAsStream(anyString())).thenReturn(System.in);
+          })) {
 
-      List<ConfigResourceReference> result = preparer.prepare();
+        ConfigResourcePreparer preparer = new ConfigResourcePreparer(configResourceLocation);
 
-      assertTrue(
-          result.stream().anyMatch(resource -> resource.resourceName().contains(PROFILE))
-      );
+        List<ConfigResourceReference> result = preparer.prepare();
+        assertTrue(
+            result.stream().anyMatch(resource -> resource.resourceName().contains(PROFILE))
+        );
+      }
     }
 
     @Test
