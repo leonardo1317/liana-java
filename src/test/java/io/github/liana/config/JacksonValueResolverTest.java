@@ -4,11 +4,15 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.MissingNode;
 import io.github.liana.config.exception.ConversionException;
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -18,24 +22,42 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-class JacksonPathMapperTest {
+class JacksonValueResolverTest {
 
-  private JacksonPathMapper mapper;
+  private ObjectMapper objectMapper;
 
   @BeforeEach
   void setUp() {
-    mapper = new JacksonPathMapper(new ObjectMapper());
+    objectMapper = new ObjectMapper();
   }
 
   @Test
   @DisplayName("should get entire source as typed map")
   void shouldGetEntireSourceAsTypedMap() {
     Map<String, Object> source = Map.of("env", "dev");
+    var resolver = new JacksonValueResolver(objectMapper, source);
     Type type = new TypeReference<Map<String, Object>>() {
     }.getType();
-    Optional<Map<String, Object>> result = mapper.get(source, type);
+    Optional<Map<String, Object>> result = resolver.getRootAs(type);
     assertTrue(result.isPresent());
     assertEquals("dev", result.get().get("env"));
+  }
+
+  @Test
+  @DisplayName("should return empty optional when rootNode is MissingNode")
+  void shouldReturnEmptyOptionalWhenRootNodeIsMissing() {
+    Type type = new TypeReference<Map<String, Object>>() {
+    }.getType();
+
+    Map<String, Object> source = Map.of("name", "my-service");
+    var spyMapper = spy(new ObjectMapper());
+
+    doReturn(MissingNode.getInstance()).when(spyMapper).valueToTree(source);
+
+    var resolver = new JacksonValueResolver(spyMapper, source);
+
+    Optional<Map<String, Object>> result = resolver.getRootAs(type);
+    assertTrue(result.isEmpty());
   }
 
   @Test
@@ -44,8 +66,9 @@ class JacksonPathMapperTest {
     Type type = new TypeReference<Map<String, Object>>() {
     }.getType();
     Map<String, Object> source = Map.of("name", "my-service");
+    var resolver = new JacksonValueResolver(objectMapper, source);
 
-    Optional<Map<String, Object>> result = mapper.get(source, "port", type);
+    Optional<Map<String, Object>> result = resolver.get("port", type);
     assertTrue(result.isEmpty());
   }
 
@@ -58,7 +81,9 @@ class JacksonPathMapperTest {
         )
     );
 
-    Optional<String> name = mapper.get(source, "app.name", String.class);
+    var resolver = new JacksonValueResolver(objectMapper, source);
+
+    Optional<String> name = resolver.get("app.name", String.class);
     assertTrue(name.isPresent());
     assertEquals("my-service", name.get());
   }
@@ -71,8 +96,9 @@ class JacksonPathMapperTest {
             "name", "my-service"
         )
     );
+    var resolver = new JacksonValueResolver(objectMapper, source);
 
-    Optional<String> missing = mapper.get(source, "app.unknown", String.class);
+    Optional<String> missing = resolver.get("app.unknown", String.class);
     assertTrue(missing.isEmpty());
   }
 
@@ -86,7 +112,9 @@ class JacksonPathMapperTest {
         )
     );
 
-    List<String> features = mapper.getList(source, "app.features", String.class);
+    var resolver = new JacksonValueResolver(objectMapper, source);
+
+    List<String> features = resolver.getList("app.features", String.class);
     assertEquals(List.of("logging", "metrics"), features);
   }
 
@@ -99,8 +127,10 @@ class JacksonPathMapperTest {
         )
     );
 
-    assertTrue(mapper.getList(source, "app.unknown", String.class).isEmpty());
-    assertTrue(mapper.getList(source, "app.name", String.class).isEmpty());
+    var resolver = new JacksonValueResolver(objectMapper, source);
+
+    assertTrue(resolver.getList("app.unknown", String.class).isEmpty());
+    assertTrue(resolver.getList("app.name", String.class).isEmpty());
   }
 
   @Test
@@ -113,7 +143,9 @@ class JacksonPathMapperTest {
         )
     );
 
-    Map<String, Object> appMap = mapper.getMap(source, "app", Object.class);
+    var resolver = new JacksonValueResolver(objectMapper, source);
+
+    Map<String, Object> appMap = resolver.getMap("app", Object.class);
     assertEquals("my-service", appMap.get("name"));
     assertEquals(8080, appMap.get("port"));
   }
@@ -127,8 +159,55 @@ class JacksonPathMapperTest {
         )
     );
 
-    assertTrue(mapper.getMap(source, "app.unknown", Object.class).isEmpty());
-    assertTrue(mapper.getMap(source, "app.features", Object.class).isEmpty());
+    var resolver = new JacksonValueResolver(objectMapper, source);
+
+    assertTrue(resolver.getMap("app.unknown", Object.class).isEmpty());
+    assertTrue(resolver.getMap("app.features", Object.class).isEmpty());
+  }
+
+  @Test
+  @DisplayName("should return original source map from getRoot")
+  void shouldReturnOriginalSourceMapFromGetRoot() {
+    Map<String, Object> source = Map.of(
+        "app", Map.of("name", "my-service")
+    );
+
+    var resolver = new JacksonValueResolver(objectMapper, source);
+
+    Map<String, Object> root = resolver.getRootAsMap();
+
+    assertEquals(source, root);
+    assertTrue(root.containsKey("app"));
+    assertEquals("my-service", ((Map<?, ?>) root.get("app")).get("name"));
+  }
+
+  @Test
+  @DisplayName("should not allow external modification of source map after resolver creation")
+  void shouldNotAllowExternalModificationOfSourceMapAfterResolverCreation() {
+    Map<String, Object> mutableSource = new HashMap<>();
+    mutableSource.put("key", "value");
+
+    var resolver = new JacksonValueResolver(objectMapper, mutableSource);
+
+    mutableSource.put("key2", "new-value");
+
+    Map<String, Object> root = resolver.getRootAsMap();
+
+    assertFalse(root.containsKey("key2"));
+    assertEquals("value", root.get("key"));
+  }
+
+  @Test
+  @DisplayName("should throw UnsupportedOperationException when attempting to modify getRoot result")
+  void shouldThrowExceptionWhenModifyingGetRootResult() {
+    Map<String, Object> source = Map.of("env", "dev");
+    var resolver = new JacksonValueResolver(objectMapper, source);
+
+    Map<String, Object> root = resolver.getRootAsMap();
+
+    assertThrows(UnsupportedOperationException.class, () -> root.put("newKey", "value"));
+    assertThrows(UnsupportedOperationException.class, () -> root.remove("env"));
+    assertThrows(UnsupportedOperationException.class, root::clear);
   }
 
   @Test
@@ -140,8 +219,10 @@ class JacksonPathMapperTest {
         )
     );
 
-    assertTrue(mapper.hasPath(source, "app.name"));
-    assertFalse(mapper.hasPath(source, "app.unknown"));
+    var resolver = new JacksonValueResolver(objectMapper, source);
+
+    assertTrue(resolver.containsKey("app.name"));
+    assertFalse(resolver.containsKey("app.unknown"));
   }
 
   @Test
@@ -153,8 +234,10 @@ class JacksonPathMapperTest {
         )
     );
 
+    var resolver = new JacksonValueResolver(objectMapper, source);
+
     assertThrows(ConversionException.class,
-        () -> mapper.get(source, "app.port", UUID.class).orElseThrow());
+        () -> resolver.get("app.port", UUID.class).orElseThrow());
   }
 
   @Test
@@ -166,7 +249,9 @@ class JacksonPathMapperTest {
         )
     );
 
-    Optional<String> element = mapper.get(source, "app.features[0]", String.class);
+    var resolver = new JacksonValueResolver(objectMapper, source);
+
+    Optional<String> element = resolver.get("app.features[0]", String.class);
     assertTrue(element.isPresent());
     assertEquals("logging", element.get());
   }
@@ -180,7 +265,9 @@ class JacksonPathMapperTest {
         )
     );
 
-    List<String> features = mapper.getList(source, "app.features", String.class);
+    var resolver = new JacksonValueResolver(objectMapper, source);
+
+    List<String> features = resolver.getList("app.features", String.class);
     assertEquals(List.of("logging", "metrics"), features);
   }
 
@@ -193,48 +280,23 @@ class JacksonPathMapperTest {
         )
     );
 
-    List<String> features = mapper.getList(source, "app.features[0]", String.class);
+    var resolver = new JacksonValueResolver(objectMapper, source);
+
+    List<String> features = resolver.getList("app.features[0]", String.class);
     assertTrue(features.isEmpty());
   }
+
 
   @Nested
   @DisplayName("Null handling")
   class NullHandlingTests {
 
-    @Nested
-    @DisplayName("when source is null")
-    class SourceNullTests {
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-      @Test
-      @DisplayName("should throw NullPointerException when getting by type")
-      void shouldThrowWhenGettingByType() {
-        assertThrows(NullPointerException.class, () -> mapper.get(null, String.class));
-      }
-
-      @Test
-      @DisplayName("should throw NullPointerException when getting by path")
-      void shouldThrowWhenGettingByPath() {
-        assertThrows(NullPointerException.class, () -> mapper.get(null, "app.name", String.class));
-      }
-
-      @Test
-      @DisplayName("should throw NullPointerException when getting list")
-      void shouldThrowWhenGettingList() {
-        assertThrows(NullPointerException.class,
-            () -> mapper.getList(null, "app.features", String.class));
-      }
-
-      @Test
-      @DisplayName("should throw NullPointerException when getting map")
-      void shouldThrowWhenGettingMap() {
-        assertThrows(NullPointerException.class, () -> mapper.getMap(null, "app", Object.class));
-      }
-
-      @Test
-      @DisplayName("should throw NullPointerException when checking path existence")
-      void shouldThrowWhenCheckingPath() {
-        assertThrows(NullPointerException.class, () -> mapper.hasPath(null, "app.name"));
-      }
+    @Test
+    @DisplayName("should throw NullPointerException when sources is null")
+    void shouldThrowWhenSourcesIsNull() {
+      assertThrows(NullPointerException.class, () -> new JacksonValueResolver(objectMapper, null));
     }
 
     @Nested
@@ -242,29 +304,30 @@ class JacksonPathMapperTest {
     class PathNullTests {
 
       private final Map<String, Object> source = Map.of("app", Map.of("name", "my-service"));
+      private final JacksonValueResolver resolver = new JacksonValueResolver(objectMapper, source);
 
       @Test
       @DisplayName("should throw NullPointerException when getting")
       void shouldThrowWhenGetting() {
-        assertThrows(NullPointerException.class, () -> mapper.get(source, null, String.class));
+        assertThrows(NullPointerException.class, () -> resolver.get(null, String.class));
       }
 
       @Test
       @DisplayName("should throw NullPointerException when getting list")
       void shouldThrowWhenGettingList() {
-        assertThrows(NullPointerException.class, () -> mapper.getList(source, null, String.class));
+        assertThrows(NullPointerException.class, () -> resolver.getList(null, String.class));
       }
 
       @Test
       @DisplayName("should throw NullPointerException when getting map")
       void shouldThrowWhenGettingMap() {
-        assertThrows(NullPointerException.class, () -> mapper.getMap(source, null, Object.class));
+        assertThrows(NullPointerException.class, () -> resolver.getMap(null, Object.class));
       }
 
       @Test
       @DisplayName("should throw NullPointerException when checking path existence")
       void shouldThrowWhenCheckingPath() {
-        assertThrows(NullPointerException.class, () -> mapper.hasPath(source, null));
+        assertThrows(NullPointerException.class, () -> resolver.containsKey(null));
       }
     }
 
@@ -275,24 +338,25 @@ class JacksonPathMapperTest {
       private final Map<String, Object> source = Map.of(
           "app", Map.of("name", "my-service", "features", List.of("logging", "metrics"))
       );
+      private final JacksonValueResolver resolver = new JacksonValueResolver(objectMapper, source);
 
       @Test
       @DisplayName("should throw NullPointerException when getting by type")
       void shouldThrowWhenGettingByType() {
-        assertThrows(NullPointerException.class, () -> mapper.get(source, null));
+        assertThrows(NullPointerException.class, () -> resolver.getRootAs(null));
       }
 
       @Test
       @DisplayName("should throw NullPointerException when getting by path")
       void shouldThrowWhenGettingByPath() {
-        assertThrows(NullPointerException.class, () -> mapper.get(source, "app.name", null));
+        assertThrows(NullPointerException.class, () -> resolver.get("app.name", null));
       }
 
       @Test
       @DisplayName("should throw NullPointerException when getting list")
       void shouldThrowWhenGettingList() {
         assertThrows(NullPointerException.class,
-            () -> mapper.getList(source, "app.features", null));
+            () -> resolver.getList("app.features", null));
       }
     }
   }

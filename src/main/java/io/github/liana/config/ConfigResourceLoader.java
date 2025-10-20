@@ -65,18 +65,6 @@ final class ConfigResourceLoader {
   }
 
   /**
-   * Loads a {@link Configuration} from a raw map.
-   *
-   * <p>This method wraps the provided {@link Map} into a {@link MapConfiguration}.
-   *
-   * @param map the map containing configuration values
-   * @return a {@link MapConfiguration} instance wrapping the provided map
-   */
-  public Configuration loadFromMap(Map<String, Object> map) {
-    return new MapConfiguration(map);
-  }
-
-  /**
    * Executes the given {@link ConfigLoader} to load a configuration from a resource.
    *
    * @param loader   the loader to use, must not be {@code null}

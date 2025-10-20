@@ -25,8 +25,8 @@ final class JsonLoader implements ConfigLoader {
    *                     null)
    * @throws NullPointerException if {@code configParser} is {@code null}
    */
-  public JsonLoader(ConfigParser configParser) {
-    this.configParser = requireNonNull(configParser, "configParser mapper must not be null");
+  JsonLoader(ConfigParser configParser) {
+    this.configParser = requireNonNull(configParser, "configParser must not be null");
   }
 
   /**

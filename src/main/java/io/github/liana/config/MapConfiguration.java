@@ -32,6 +32,6 @@ public class MapConfiguration extends AbstractConfiguration {
    * @param nestedMap the map containing configuration properties; must not be {@code null}
    */
   protected MapConfiguration(Map<String, Object> nestedMap) {
-    super(nestedMap);
+    super(new JacksonValueResolver(nestedMap));
   }
 }

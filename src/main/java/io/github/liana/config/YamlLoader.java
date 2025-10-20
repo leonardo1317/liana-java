@@ -25,8 +25,8 @@ final class YamlLoader implements ConfigLoader {
    *                     null)
    * @throws NullPointerException if {@code configParser} is {@code null}
    */
-  public YamlLoader(ConfigParser configParser) {
-    this.configParser = requireNonNull(configParser, "configParser mapper must not be null");
+  YamlLoader(ConfigParser configParser) {
+    this.configParser = requireNonNull(configParser, "configParser must not be null");
   }
 
   /**

@@ -24,5 +24,4 @@ public interface ConfigResourceLocationBuilder {
   ConfigResourceLocationBuilder placeholders(Placeholder placeholder);
 
   ConfigResourceLocation build();
-
 }

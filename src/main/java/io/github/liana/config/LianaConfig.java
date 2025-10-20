@@ -10,21 +10,26 @@
 package io.github.liana.config;
 
 /**
- * Provides access to the singleton {@link ConfigManager} used to manage configuration loading.
+ * Provides access to the default singleton {@link ConfigManager}.
  *
- * <p>This class acts as a static entry point for retrieving the default configuration manager
- * instance, typically used throughout the application to load and access configuration values.
+ * <p>This class acts as the main entry point for loading and managing configuration data.
+ * It exposes both a default, globally shared instance, and a builder for custom configurations.
  *
  * <p>Example usage:
  * <pre>{@code
- * ConfigManager config = LianaConfig.getInstance();
- * }</pre>
+ * // Use the default configuration manager
+ * ConfigManager config = LianaConfig.defaultManager();
  *
- * <p>This class cannot be instantiated.
+ * // Build a custom one with extra providers or loaders
+ * ConfigManager custom = LianaConfig.builder()
+ *     .addProviders(new HttpProvider())
+ *     .addLoaders(new TomlLoader(...))
+ *     .build();
+ * }</pre>
  */
 public final class LianaConfig {
 
-  private static final DefaultConfigManager INSTANCE = new DefaultConfigManager();
+  private static final ConfigManager INSTANCE = builder().build();
 
   private LianaConfig() {
   }
@@ -36,5 +41,14 @@ public final class LianaConfig {
    */
   public static ConfigManager getInstance() {
     return INSTANCE;
+  }
+
+  /**
+   * Returns a new builder for creating custom {@link ConfigManager} instances.
+   *
+   * @return a new {@link LianaConfigBuilder}
+   */
+  public static LianaConfigBuilder builder() {
+    return new DefaultLianaConfigBuilder();
   }
 }

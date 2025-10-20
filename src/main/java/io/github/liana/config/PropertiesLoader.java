@@ -21,12 +21,12 @@ final class PropertiesLoader implements ConfigLoader {
    * <p>The provided parser will be used to transform Properties resources into
    * {@link Configuration} instances.
    *
-   * @param configParser the parser responsible for interpreting Properties input streams (must not be
-   *                     null)
+   * @param configParser the parser responsible for interpreting Properties input streams (must not
+   *                     be null)
    * @throws NullPointerException if {@code configParser} is {@code null}
    */
-  public PropertiesLoader(ConfigParser configParser) {
-    this.configParser = requireNonNull(configParser, "configParser mapper must not be null");
+  PropertiesLoader(ConfigParser configParser) {
+    this.configParser = requireNonNull(configParser, "configParser must not be null");
   }
 
   /**

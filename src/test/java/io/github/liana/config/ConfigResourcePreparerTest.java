@@ -32,11 +32,15 @@ class ConfigResourcePreparerTest {
 
   @Mock
   private ConfigResourceLocation configResourceLocation;
+
+  @Mock
+  private ResourceLocator resourceLocator;
+
   private ConfigResourcePreparer preparer;
 
   @BeforeEach
   void setUp() {
-    preparer = new ConfigResourcePreparer(configResourceLocation);
+    preparer = new ConfigResourcePreparer(configResourceLocation, null, resourceLocator);
   }
 
   @Nested
@@ -44,16 +48,35 @@ class ConfigResourcePreparerTest {
   class ConstructorTests {
 
     @Test
+    @DisplayName("should use default ClasspathResource and default profile when single-arg constructor used")
+    void shouldUseDefaultClasspathResourceAndDefaultProfile() {
+      final String PROFILE = "default";
+
+      ConfigResourcePreparer preparer = new ConfigResourcePreparer(configResourceLocation);
+
+      List<ConfigResourceReference> result = preparer.prepare();
+
+      assertTrue(
+          result.stream().anyMatch(resource -> resource.resourceName().contains(PROFILE))
+      );
+    }
+
+    @Test
     @DisplayName("should throw when ConfigResourceLocation is null")
     void shouldThrowWhenConfigResourceLocationIsNull() {
-      assertThrows(NullPointerException.class, () -> new ConfigResourcePreparer(null));
+      assertThrows(NullPointerException.class,
+          () -> new ConfigResourcePreparer(null, null, resourceLocator)
+      );
     }
 
     @Test
     @DisplayName("should use default profile when profile is null")
     void shouldUseDefaultProfileWhenProfileIsNull() {
       final String PROFILE = "default";
-      ConfigResourcePreparer preparer = new ConfigResourcePreparer(configResourceLocation, null);
+      when(resourceLocator.resourceExists(anyString())).thenReturn(true);
+
+      ConfigResourcePreparer preparer =
+          new ConfigResourcePreparer(configResourceLocation, null, resourceLocator);
 
       List<ConfigResourceReference> result = preparer.prepare();
 
@@ -66,7 +89,9 @@ class ConfigResourcePreparerTest {
     @DisplayName("should use default profile when profile is empty")
     void shouldUseDefaultProfileWhenProfileIsEmpty() {
       final String PROFILE = "default";
-      ConfigResourcePreparer preparer = new ConfigResourcePreparer(configResourceLocation, "");
+      when(resourceLocator.resourceExists(anyString())).thenReturn(true);
+      ConfigResourcePreparer preparer = new ConfigResourcePreparer(configResourceLocation, "",
+          resourceLocator);
 
       List<ConfigResourceReference> result = preparer.prepare();
 
@@ -79,12 +104,22 @@ class ConfigResourcePreparerTest {
     @DisplayName("should assign profile correctly when profile is provided")
     void shouldAssignProfileCorrectlyWhenProfileIsProvided() {
       final String PROFILE = "dev";
-      ConfigResourcePreparer preparer = new ConfigResourcePreparer(configResourceLocation, PROFILE);
+      when(resourceLocator.resourceExists(anyString())).thenReturn(true);
+      ConfigResourcePreparer preparer = new ConfigResourcePreparer(configResourceLocation, PROFILE,
+          resourceLocator);
 
       List<ConfigResourceReference> result = preparer.prepare();
 
       assertTrue(
           result.stream().anyMatch(resource -> resource.resourceName().contains(PROFILE))
+      );
+    }
+
+    @Test
+    @DisplayName("should throw when ResourceLocator is null")
+    void shouldThrowWhenResourceLocatorIsNull() {
+      assertThrows(NullPointerException.class,
+          () -> new ConfigResourcePreparer(configResourceLocation, null, null)
       );
     }
   }
@@ -99,6 +134,7 @@ class ConfigResourcePreparerTest {
     void shouldUseDefaultProviderWhenProviderIsNullOrEmpty(String invalidProvider) {
       final String DEFAULT_PROVIDER = "classpath";
       when(configResourceLocation.getProvider()).thenReturn(invalidProvider);
+      when(resourceLocator.resourceExists(anyString())).thenReturn(true);
 
       List<ConfigResourceReference> result = preparer.prepare();
 
@@ -113,6 +149,7 @@ class ConfigResourcePreparerTest {
     void shouldUseDefaultProviderWhenProviderIsBlank(String provider) {
       final String DEFAULT_PROVIDER = "classpath";
       when(configResourceLocation.getProvider()).thenReturn(provider);
+      when(resourceLocator.resourceExists(anyString())).thenReturn(true);
 
       List<ConfigResourceReference> result = preparer.prepare();
 
@@ -155,14 +192,12 @@ class ConfigResourcePreparerTest {
       when(configResourceLocation.getResourceNames()).thenReturn(
           ImmutableConfigSet.of(resourceNames));
 
+      when(resourceLocator.resourceExists(anyString())).thenReturn(true);
+
       try (
-          MockedStatic<ClasspathResource> mockedClasspath = mockStatic(ClasspathResource.class);
           MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(
               FilenameValidator.class)
       ) {
-        mockedClasspath.when(() -> ClasspathResource.resourceExists(anyString()))
-            .thenReturn(true);
-
         mockedIsSafeResourceName.when(() -> FilenameValidator.isSafeResourceName(anyString()))
             .thenReturn(true);
 
@@ -192,15 +227,12 @@ class ConfigResourcePreparerTest {
       resourceNames.add(resourceName);
       when(configResourceLocation.getResourceNames()).thenReturn(
           ImmutableConfigSet.of(resourceNames));
+      when(resourceLocator.resourceExists(anyString())).thenReturn(true);
 
       try (
-          MockedStatic<ClasspathResource> mockedClasspath = mockStatic(ClasspathResource.class);
           MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(
               FilenameValidator.class)
       ) {
-
-        mockedClasspath.when(() -> ClasspathResource.resourceExists(anyString()))
-            .thenReturn(true);
 
         mockedIsSafeResourceName.when(() -> FilenameValidator.isSafeResourceName(anyString()))
             .thenReturn(true);
@@ -226,14 +258,11 @@ class ConfigResourcePreparerTest {
       resourceNames.add(resourceName);
       when(configResourceLocation.getResourceNames()).thenReturn(
           ImmutableConfigSet.of(resourceNames));
-
+      when(resourceLocator.resourceExists(anyString())).thenReturn(false);
       try (
-          MockedStatic<ClasspathResource> mockedClasspath = mockStatic(ClasspathResource.class);
           MockedStatic<FilenameValidator> mockedIsSafeResourceName = mockStatic(
               FilenameValidator.class)
       ) {
-        mockedClasspath.when(() -> ClasspathResource.resourceExists(anyString()))
-            .thenReturn(false);
 
         mockedIsSafeResourceName.when(() -> FilenameValidator.isSafeResourceName(anyString()))
             .thenReturn(false);

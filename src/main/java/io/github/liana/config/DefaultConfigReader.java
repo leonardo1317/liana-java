@@ -18,20 +18,20 @@ class DefaultConfigReader implements ConfigReader {
 
   @Override
   public Map<String, Object> getAllConfig() {
-    return Collections.unmodifiableMap(config.getAllConfig());
+    return Collections.unmodifiableMap(config.getRootAsMap());
   }
 
   @Override
   public <T> Optional<T> getAllConfigAs(Class<T> clazz) {
     requireNonNull(clazz, "clazz must not be null");
-    return config.getAllConfigAs(clazz);
+    return config.getRootAs(clazz);
   }
 
   @Override
   public boolean hasKey(String key) {
     requireNonNull(key, "key must not be null");
     requireNonBlank(key, "key must not be blank");
-    return config.hasKey(key);
+    return config.containsKey(key);
   }
 
   @Override

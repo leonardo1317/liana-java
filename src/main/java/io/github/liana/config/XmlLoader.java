@@ -25,8 +25,8 @@ final class XmlLoader implements ConfigLoader {
    *                     null)
    * @throws NullPointerException if {@code configParser} is {@code null}
    */
-  public XmlLoader(ConfigParser configParser) {
-    this.configParser = requireNonNull(configParser, "configParser mapper must not be null");
+  XmlLoader(ConfigParser configParser) {
+    this.configParser = requireNonNull(configParser, "configParser must not be null");
   }
 
   /**

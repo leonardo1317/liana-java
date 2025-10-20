@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.github.liana.internal.StringUtils;
+import java.util.Locale;
 import java.util.ServiceLoader;
 
 /**
@@ -105,14 +106,14 @@ final class JacksonMappers {
   /**
    * Returns the {@link ObjectMapper} for the given format.
    *
-   * @param type format name, e.g. "JSON", "YAML", "XML", or "java_properties"
+   * @param formatName format name, e.g. "JSON", "YAML", "XML", or "java_properties"
    * @return mapper for the given format
    * @throws IllegalStateException if no mapper supports the format
    */
-  private ObjectMapper get(String type) {
-    return registry.get(type)
+  private ObjectMapper get(String formatName) {
+    return registry.get(formatName.toUpperCase(Locale.ROOT))
         .orElseThrow(
-            () -> new IllegalStateException("no mapper available for format " + type));
+            () -> new IllegalStateException("no mapper available for format " + formatName));
   }
 
   /**

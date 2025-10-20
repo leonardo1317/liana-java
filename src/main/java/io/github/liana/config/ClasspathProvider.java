@@ -1,5 +1,7 @@
 package io.github.liana.config;
 
+import static java.util.Objects.requireNonNull;
+
 import io.github.liana.config.exception.ConfigProviderException;
 import java.io.InputStream;
 import java.util.Collections;
@@ -12,6 +14,12 @@ import java.util.Set;
  * {@code src/main/resources} or bundled in JAR files.
  */
 final class ClasspathProvider implements ConfigProvider {
+
+  private final ResourceLocator resourceLocator;
+
+  ClasspathProvider(ResourceLocator resourceLocator) {
+    this.resourceLocator = requireNonNull(resourceLocator, "resourceLocator must not be null");
+  }
 
   /**
    * Returns the provider identifier for classpath resources.
@@ -36,9 +44,9 @@ final class ClasspathProvider implements ConfigProvider {
   @Override
   public ConfigResource resolveResource(ConfigResourceReference resource) {
     validateResource(resource);
-    InputStream input = ClasspathResource.getResourceAsStream(resource.resourceName());
+    InputStream input = resourceLocator.getResourceAsStream(resource.resourceName());
     if (input == null) {
-      throw new ConfigProviderException("Config resource not found " + resource.resourceName());
+      throw new ConfigProviderException("config resource not found " + resource.resourceName());
     }
     return new ConfigResource(resource.resourceName(), input);
   }

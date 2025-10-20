@@ -39,7 +39,7 @@ public class JacksonConfiguration extends AbstractConfiguration {
    * @throws NullPointerException if {@code mapper} or {@code input} are null
    */
   protected JacksonConfiguration(ObjectMapper mapper, InputStream input) throws IOException {
-    super(read(mapper, input));
+    super(new JacksonValueResolver(read(mapper, input)));
   }
 
   /**

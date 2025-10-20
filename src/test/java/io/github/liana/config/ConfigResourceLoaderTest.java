@@ -1,6 +1,5 @@
 package io.github.liana.config;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -10,7 +9,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.github.liana.config.exception.ConfigLoaderException;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -120,15 +118,5 @@ class ConfigResourceLoaderTest {
 
     assertTrue(ex.getMessage().contains("unexpected error"));
     assertInstanceOf(RuntimeException.class, ex.getCause());
-  }
-
-  @Test
-  @DisplayName("should load configuration from map")
-  void shouldLoadFromMap() {
-    Map<String, Object> map = Map.of("key", "value");
-    Configuration config = loader.loadFromMap(map);
-
-    assertInstanceOf(MapConfiguration.class, config);
-    assertEquals(Optional.of("value"), config.get("key", String.class));
   }
 }

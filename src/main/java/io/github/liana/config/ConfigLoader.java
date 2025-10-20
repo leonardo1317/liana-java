@@ -9,7 +9,7 @@ import java.util.Set;
  * Loads configuration files from various sources and formats. Implementations handle specific file
  * formats (PROPERTIES, YAML, JSON, XML, etc.).
  */
-interface ConfigLoader extends Strategy<String>  {
+public interface ConfigLoader extends Strategy<String>  {
 
   /**
    * Supported configuration extensions for this loader.

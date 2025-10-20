@@ -43,6 +43,7 @@ class ConfigResourcePreparer {
   private final ConfigLogger log;
   private final ConfigResourceLocation location;
   private final String profile;
+  private final ResourceLocator resourceLocator;
 
   /**
    * Constructs a {@code ConfigResourcePreparer} using the given location and the profile from the
@@ -51,7 +52,7 @@ class ConfigResourcePreparer {
    * @param location the config resource location to resolve
    */
   public ConfigResourcePreparer(ConfigResourceLocation location) {
-    this(location, PropertySources.fromEnv().get(PROFILE_ENV_VAR));
+    this(location, PropertySources.fromEnv().get(PROFILE_ENV_VAR), new ClasspathResource());
   }
 
   /**
@@ -60,10 +61,12 @@ class ConfigResourcePreparer {
    * @param location the config resource location to resolve
    * @param profile  the profile name to use for resolving default resources
    */
-  public ConfigResourcePreparer(ConfigResourceLocation location, String profile) {
+  public ConfigResourcePreparer(ConfigResourceLocation location, String profile,
+      ResourceLocator resourceLocator) {
     this.location = requireNonNull(location, "ConfigResourceLocation must not be null");
     this.profile = defaultIfBlank(profile, DEFAULT_PROFILE);
-    log = ConsoleConfigLogger.getLogger();
+    this.log = ConsoleConfigLogger.getLogger();
+    this.resourceLocator = requireNonNull(resourceLocator, "ResourceLocator must not be null");
   }
 
   /**
@@ -183,7 +186,7 @@ class ConfigResourcePreparer {
   private Optional<String> findConfigResource(String baseResourceName) {
     return ConfigFileFormat.getAllSupportedExtensions().stream()
         .map(extension -> baseResourceName + "." + extension)
-        .filter(ClasspathResource::resourceExists)
+        .filter(resourceLocator::resourceExists)
         .findFirst()
         .or(() -> {
           log.warn(
