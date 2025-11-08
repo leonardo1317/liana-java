@@ -52,6 +52,7 @@ class ConfigResourceProcessor {
   private static final long NANOS_PER_MILLISECOND = 1_000_000L;
   private final ConfigResourceProvider provider;
   private final ConfigResourceLoader loader;
+  private final ConfigResourcePreparer configResourcePreparer;
 
   /**
    * Creates a new {@code ConfigResourceProcessor} instance.
@@ -62,9 +63,11 @@ class ConfigResourceProcessor {
    *                 {@code null}
    * @throws NullPointerException if {@code provider} or {@code loader} is {@code null}
    */
-  public ConfigResourceProcessor(ConfigResourceProvider provider, ConfigResourceLoader loader) {
+  public ConfigResourceProcessor(ConfigResourceProvider provider, ConfigResourceLoader loader,
+      ConfigResourcePreparer configResourcePreparer) {
     this.provider = requireNonNull(provider);
     this.loader = requireNonNull(loader);
+    this.configResourcePreparer = requireNonNull(configResourcePreparer);
   }
 
   /**
@@ -83,9 +86,9 @@ class ConfigResourceProcessor {
     requireNonNull(location);
     ConfigLogger log = ConsoleConfigLogger.getLogger(location.isVerboseLogging());
     log.debug(() -> "starting configuration load");
-    ConfigResourcePreparer preparer = new ConfigResourcePreparer(location);
-    List<ConfigResourceReference> references = preparer.prepare();
-    List<Map<String, Object>> configs = new ArrayList<>(references.size());
+
+    List<ConfigResourceReference> references = configResourcePreparer.prepare();
+    var configs = new ArrayList<Map<String, Object>>(references.size());
     for (ConfigResourceReference reference : references) {
       processSingleResource(reference, log).ifPresent(configs::add);
     }

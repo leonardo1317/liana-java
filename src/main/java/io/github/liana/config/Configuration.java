@@ -1,7 +1,17 @@
+/**
+ * Copyright 2025 Leonardo Favio Romero Silva
+ *
+ * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of the License at
+ *
+ * <p><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache-2.0</a>
+ */
 package io.github.liana.config;
 
 import io.github.liana.config.exception.ConversionException;
+import io.github.liana.config.exception.MissingConfigException;
 import java.lang.reflect.Type;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,37 +34,153 @@ public interface Configuration {
    * @param key the configuration key to check
    * @return {@code true} if the configuration contains the key, {@code false} otherwise
    * @throws NullPointerException if {@code key} is {@code null}
-   * @throws ConversionException  if the key cannot be resolved or the underlying data cannot be parsed
-   *
+   * @throws ConversionException  if the key cannot be resolved or the underlying data cannot be
+   *                              parsed
    */
   boolean containsKey(String key);
 
   /**
-   * Retrieves a configuration value for the given key and converts it to the specified type.
+   * Returns the configuration value associated with the given key, converted to the specified
+   * type.
    *
-   * <p>This is the most flexible retrieval method. It supports:
-   * <ul>
-   *   <li>Simple types (e.g. {@code String.class}, {@code Integer.class}).</li>
-   *   <li>Parameterized types (e.g. {@code List<String>}, {@code Map<String, Integer>}).</li>
-   *   <li>Nesting combinations (e.g. {@code Map<String, List<MyPojo>>},
-   *       {@code List<Map<String, MyPojo>>}, {@code Map<String, Map<String, MyPojo>>}).</li>
-   *   <li>Mapping to POJOs or records representing structured configuration.</li>
-   * </ul>
+   * @param key   the configuration key to look up (must not be {@code null})
+   * @param clazz the expected class of the value (must not be {@code null})
+   * @param <T>   the target class
+   * @return an {@link Optional} containing the value if present and convertible, or an empty
+   * optional otherwise
+   * @throws NullPointerException if {@code key} or {@code clazz} is {@code null}
+   * @throws ConversionException  if conversion fails or the key cannot be resolved
+   */
+  <T> Optional<T> get(String key, Class<T> clazz);
+
+  /**
+   * Returns the configuration value associated with the given key, converted to a generic type.
    *
-   * <p>Example:
-   * <pre>{@code
-   * Type t = new TypeReference<Map<String, List<AppConfig>>>() {}.getType();
-   * Optional<Map<String, List<AppConfig>>> cfg = configuration.get("clients", t);
-   * }</pre>
-   *
-   * @param <T> the expected result type
-   * @param key the configuration key
-   * @param type the target type to convert the value into (maybe a {@link Class} or any reflective {@link Type})
-   * @return an {@link Optional} containing the resolved value, or empty if the key does not exist
+   * @param key  the configuration key to look up (must not be {@code null})
+   * @param type the expected generic type (must not be {@code null})
+   * @param <T>  the target type
+   * @return an {@link Optional} containing the value if present and convertible, or an empty
+   * optional otherwise
    * @throws NullPointerException if {@code key} or {@code type} is {@code null}
    * @throws ConversionException  if conversion fails or the key cannot be resolved
    */
-  <T> Optional<T> get(String key, Type type);
+  <T> Optional<T> get(String key, TypeOf<T> type);
+
+  /**
+   * Retrieves the configuration value associated with the given key, or returns the specified
+   * default value if the key is not present.
+   *
+   * <p>This method is useful for optional configuration values where a default should be applied
+   * automatically.
+   *
+   * @param key          the configuration key to look up (must not be {@code null})
+   * @param type         the expected generic type (must not be {@code null})
+   * @param defaultValue the value to return if the key is absent
+   * @param <T>          the target type
+   * @return the configuration value associated with the key, or {@code defaultValue} if missing
+   * @throws NullPointerException if {@code key} or {@code type} is {@code null}
+   * @throws ConversionException  if conversion fails or the key cannot be resolved
+   */
+  default <T> T get(String key, TypeOf<T> type, T defaultValue) {
+    return get(key, type).orElse(defaultValue);
+  }
+
+  /**
+   * Retrieves the configuration value associated with the given key, or returns the specified
+   * default value if the key is not present.
+   *
+   * <p>This method is useful for optional configuration values where a default should be applied
+   * automatically.
+   *
+   * @param key          the configuration key to look up (must not be {@code null})
+   * @param clazz        the expected class of the value (must not be {@code null})
+   * @param defaultValue the value to return if the key is absent
+   * @param <T>          the target type
+   * @return the configuration value associated with the key, or {@code defaultValue} if missing
+   * @throws NullPointerException if {@code key} or {@code clazz} is {@code null}
+   * @throws ConversionException  if conversion fails or the key cannot be resolved
+   */
+  default <T> T get(String key, Class<T> clazz, T defaultValue) {
+    return get(key, clazz).orElse(defaultValue);
+  }
+
+  /**
+   * Convenience method for mandatory keys. Returns the value or throws
+   * {@link MissingConfigException} if the key is missing.
+   *
+   * <p>This method simplifies access to required configuration values without using
+   * {@link Optional}.
+   *
+   * @param key   the configuration key to look up (must not be {@code null})
+   * @param clazz the expected class of the value (must not be {@code null})
+   * @param <T>   the target type
+   * @return the configuration value associated with the key
+   * @throws NullPointerException   if {@code key} or {@code clazz} is {@code null}
+   * @throws MissingConfigException if the key is not present in the configuration
+   * @throws ConversionException    if conversion fails or the key cannot be resolved
+   */
+  default <T> T getOrThrow(String key, Class<T> clazz) {
+    return get(key, clazz).orElseThrow(() -> missingConfigException(key));
+  }
+
+  /**
+   * Convenience method for mandatory keys with generic types. Throws {@link MissingConfigException}
+   * if the key is missing.
+   *
+   * <p>This method simplifies access to required configuration values of generic types without
+   * using {@link Optional}.
+   *
+   * @param key  the configuration key to look up (must not be {@code null})
+   * @param type the expected generic type (must not be {@code null})
+   * @param <T>  the target type
+   * @return the configuration value associated with the key
+   * @throws NullPointerException   if {@code key} or {@code type} is {@code null}
+   * @throws MissingConfigException if the key is not present in the configuration
+   * @throws ConversionException    if conversion fails or the key cannot be resolved
+   */
+  default <T> T getOrThrow(String key, TypeOf<T> type) {
+    return get(key, type).orElseThrow(() -> missingConfigException(key));
+  }
+
+  default String getString(String key) {
+    return getOrThrow(key, String.class);
+  }
+
+  default int getInt(String key) {
+    return getOrThrow(key, Integer.class);
+  }
+
+  default boolean getBoolean(String key) {
+    return getOrThrow(key, Boolean.class);
+  }
+
+  default double getDouble(String key) {
+    return getOrThrow(key, Double.class);
+  }
+
+  default Duration getDuration(String key) {
+    return getOrThrow(key, Duration.class);
+  }
+
+  default String getString(String key, String defaultValue) {
+    return get(key, String.class, defaultValue);
+  }
+
+  default int getInt(String key, int defaultValue) {
+    return get(key, Integer.class, defaultValue);
+  }
+
+  default boolean getBoolean(String key, boolean defaultValue) {
+    return get(key, Boolean.class, defaultValue);
+  }
+
+  default double getDouble(String key, double defaultValue) {
+    return get(key, Double.class, defaultValue);
+  }
+
+  default Duration getDuration(String key, Duration defaultValue) {
+    return get(key, Duration.class, defaultValue);
+  }
 
   /**
    * Retrieves a configuration value as a list of elements of the specified type.
@@ -101,14 +227,19 @@ public interface Configuration {
    * Converts the entire configuration root into the specified type.
    *
    * <p>This method supports complex or parameterized types, allowing conversion
-   * into either a structured POJO or a generic container type (for example,
-   * {@code AppConfig}, {@code Map<String, Object>}, or {@code List<Service>}).
+   * into either a structured POJO or a generic container type (for example, {@code AppConfig},
+   * {@code Map<String, Object>}, or {@code List<Service>}).
    *
    * @param <T>  the target type
    * @param type the reflective type representing the desired structure
    * @return an {@link Optional} containing the mapped object, or empty if the conversion fails
    * @throws NullPointerException if {@code type} is {@code null}
-   * @throws ConversionException  if conversion fails or the structure cannot be mapped to the target type
+   * @throws ConversionException  if conversion fails or the structure cannot be mapped to the
+   *                              target type
    */
   <T> Optional<T> getRootAs(Type type);
+
+  private static MissingConfigException missingConfigException(String key) {
+    return new MissingConfigException("Missing required config: " + key);
+  }
 }

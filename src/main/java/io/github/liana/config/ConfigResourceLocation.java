@@ -7,6 +7,8 @@ public interface ConfigResourceLocation {
 
   String getProvider();
 
+  ImmutableConfigSet getBaseDirectories();
+
   ImmutableConfigSet getResourceNames();
 
   ImmutableConfigMap getVariables();

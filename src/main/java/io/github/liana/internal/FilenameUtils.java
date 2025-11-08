@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.function.Supplier;
 
 /**
@@ -33,7 +34,7 @@ public final class FilenameUtils {
    */
   public static String getName(String path) {
     requireNonNullOrThrow(path);
-    return resolvePath(() -> Path.of(path).getFileName()).toString();
+    return resolvePath(() -> Paths.get(path).getFileName()).toString();
   }
 
   /**
@@ -58,22 +59,6 @@ public final class FilenameUtils {
   }
 
   /**
-   * Returns a normalized version of the given path string by removing redundant name elements such
-   * as {@code "."} and resolving {@code ".."} where possible.
-   *
-   * <p>For example, {@code "a/b/../c/."} becomes {@code "a/c"}.
-   *
-   * @param path the path string to normalize
-   * @return the normalized path string
-   * @throws NullPointerException     if {@code path} is {@code null}
-   * @throws IllegalArgumentException if {@code path} is syntactically invalid
-   */
-  public static String normalize(String path) {
-    requireNonNullOrThrow(path);
-    return resolvePath(() -> Path.of(path).normalize()).toString();
-  }
-
-  /**
    * Resolves a {@link Path} using the given {@link Supplier}, converting any
    * {@link InvalidPathException} into an {@link IllegalArgumentException}.
    *
@@ -83,7 +68,7 @@ public final class FilenameUtils {
    * @return the resolved {@link Path}
    * @throws IllegalArgumentException if the supplied path is invalid
    */
-  private static Path resolvePath(Supplier<Path> pathSupplier) {
+  public static Path resolvePath(Supplier<Path> pathSupplier) {
     try {
       return pathSupplier.get();
     } catch (InvalidPathException e) {

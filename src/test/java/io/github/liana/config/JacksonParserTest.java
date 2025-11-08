@@ -1,38 +1,27 @@
 package io.github.liana.config;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.liana.config.exception.ConversionException;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 class JacksonParserTest {
-
-  @Mock
-  private ObjectMapper mapper;
-
-  @Mock
-  private InputStream inputStream;
 
   private JacksonParser parser;
 
   @BeforeEach
   void setUp() {
-    parser = new JacksonParser(mapper);
+    parser = new JacksonParser(new ObjectMapper());
   }
 
   @Test
@@ -42,27 +31,32 @@ class JacksonParserTest {
   }
 
   @Test
-  @DisplayName("should parse input stream and return JacksonConfiguration")
-  void shouldParseInputStreamAndReturnJacksonConfiguration() throws IOException {
-    Map<String, Object> expectedMap = Map.of("key", "value");
+  @DisplayName("should create configuration successfully from valid JSON input stream")
+  void shouldCreateConfigurationSuccessfully() throws IOException {
+    String json = "{\"app\": {\"name\": \"liana\", \"version\": 1}}";
+    InputStream input = new ByteArrayInputStream(json.getBytes());
 
-    when(
-        mapper.readValue(any(InputStream.class), Mockito.<TypeReference<Map<String, Object>>>any()))
-        .thenReturn(expectedMap);
-
-    Configuration configuration = parser.parse(inputStream);
+    Configuration configuration = parser.parse(input);
 
     assertNotNull(configuration);
     assertInstanceOf(JacksonConfiguration.class, configuration);
+    assertTrue(configuration.containsKey("app.name"));
+    assertEquals("liana", configuration.get("app.name", String.class).orElse(null));
+    assertEquals(1, configuration.get("app.version", Integer.class).orElse(-1));
   }
 
   @Test
-  @DisplayName("should propagate IOException when parsing fails")
-  void shouldPropagateIOExceptionWhenParsingFails() throws IOException {
-    when(
-        mapper.readValue(any(InputStream.class), Mockito.<TypeReference<Map<String, Object>>>any()))
-        .thenThrow(new IOException("error reading JSON"));
+  @DisplayName("should propagate ConversionException when input JSON is invalid")
+  void shouldPropagateConversionExceptionWhenInputJsonIsInvalid() {
+    String invalidJson = "{ invalid json ";
+    InputStream input = new ByteArrayInputStream(invalidJson.getBytes());
 
-    assertThrows(IOException.class, () -> parser.parse(inputStream));
+    assertThrows(ConversionException.class, () -> parser.parse(input));
+  }
+
+  @Test
+  @DisplayName("should throw NullPointerException when input is null")
+  void shouldThrowExceptionWhenInputIsNull() {
+    assertThrows(NullPointerException.class, () -> parser.parse(null));
   }
 }

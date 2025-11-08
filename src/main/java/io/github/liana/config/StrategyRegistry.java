@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * A registry for {@link Strategy} implementations, keyed by values of type {@code K}.
@@ -117,6 +118,15 @@ public final class StrategyRegistry<K, V extends Strategy<K>> {
   public Optional<V> get(K key) {
     requireNonNull(key, KEY_MUST_NOT_BE_NULL);
     return Optional.ofNullable(strategies.get(keyNormalizer.normalize(key)));
+  }
+
+  /**
+   * Returns all registered keys in the order they were inserted.
+   *
+   * @return an unmodifiable set of all keys
+   */
+  public Set<K> getAllKeys() {
+    return Collections.unmodifiableSet(strategies.keySet());
   }
 
   /**

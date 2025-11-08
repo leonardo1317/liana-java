@@ -1,10 +1,11 @@
 package io.github.liana.config;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Supported configuration file formats and their associated extensions.
@@ -16,20 +17,6 @@ public enum ConfigFileFormat {
   XML(of("xml"));
 
   private final Set<String> extensions;
-  private static final Set<String> ALL_EXTENSIONS;
-
-  static {
-    Set<String> tempExtensions = new LinkedHashSet<>();
-    for (ConfigFileFormat fileFormat : values()) {
-      for (String extension : fileFormat.extensions) {
-        if (!tempExtensions.add(extension.toLowerCase(Locale.ROOT))) {
-          throw new IllegalStateException("duplicate extension: " + extension);
-        }
-      }
-    }
-
-    ALL_EXTENSIONS = Collections.unmodifiableSet(tempExtensions);
-  }
 
   ConfigFileFormat(Set<String> extensions) {
     this.extensions = extensions;
@@ -44,16 +31,11 @@ public enum ConfigFileFormat {
     return extensions;
   }
 
-  /**
-   * Gets all supported extensions across all formats (no duplicates).
-   *
-   * @return Immutable set in declaration order
-   */
-  public static Set<String> getAllSupportedExtensions() {
-    return ALL_EXTENSIONS;
-  }
-
   private static Set<String> of(String... values) {
-    return Collections.unmodifiableSet(new LinkedHashSet<>(List.of(values)));
+    var extensions = Arrays.stream(values)
+        .map(extension -> extension.toLowerCase(Locale.ROOT))
+        .collect(Collectors.toCollection(LinkedHashSet::new));
+
+    return Collections.unmodifiableSet(extensions);
   }
 }

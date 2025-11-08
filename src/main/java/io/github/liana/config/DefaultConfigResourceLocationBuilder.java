@@ -3,6 +3,7 @@ package io.github.liana.config;
 import static io.github.liana.config.ConfigDefaults.PROVIDER;
 import static io.github.liana.internal.MapUtils.of;
 import static java.util.Objects.requireNonNull;
+import static java.util.Objects.requireNonNullElse;
 
 import io.github.liana.config.exception.InvalidConfigVariablesException;
 import io.github.liana.internal.ImmutableConfigMap;
@@ -19,12 +20,13 @@ class DefaultConfigResourceLocationBuilder implements ConfigResourceLocationBuil
 
   private static final String RESOURCES_MUST_NOT_BE_NULL = "resources must not be null";
   private static final String VARIABLES_MUST_NOT_BE_NULL = "variables must not be null";
-
+  private static final String PLACEHOLDER_MUST_NOT_BE_NULL = "placeholder must not be null";
   private String provider = "";
   private final Set<String> resourceNames = new LinkedConfigSet();
+  private final Set<String> baseDirectories = new LinkedConfigSet();
   private final Map<String, String> variables = new LinkedConfigMap();
   private boolean verboseLogging;
-  private Placeholder placeholder = Placeholders.builder().build();
+  private Placeholder placeholder;
 
   /**
    * Sets the provider for this configuration location.
@@ -36,6 +38,13 @@ class DefaultConfigResourceLocationBuilder implements ConfigResourceLocationBuil
   public ConfigResourceLocationBuilder provider(String provider) {
     this.provider = provider;
 
+    return this;
+  }
+
+  @Override
+  public ConfigResourceLocationBuilder baseDirectories(String... baseDirectories) {
+    requireNonNull(baseDirectories, "baseDirectories must not be null");
+    this.baseDirectories.addAll(Arrays.asList(baseDirectories));
     return this;
   }
 
@@ -156,6 +165,7 @@ class DefaultConfigResourceLocationBuilder implements ConfigResourceLocationBuil
 
   @Override
   public ConfigResourceLocationBuilder placeholders(Placeholder placeholder) {
+    requireNonNull(placeholder, PLACEHOLDER_MUST_NOT_BE_NULL);
     this.placeholder = placeholder;
 
     return this;
@@ -170,10 +180,11 @@ class DefaultConfigResourceLocationBuilder implements ConfigResourceLocationBuil
   public ConfigResourceLocation build() {
     return new DefaultConfigResourceLocation(
         StringUtils.defaultIfBlank(provider, PROVIDER),
+        ImmutableConfigSet.of(baseDirectories),
         ImmutableConfigSet.of(resourceNames),
         ImmutableConfigMap.of(variables),
         verboseLogging,
-        placeholder
+        requireNonNullElse(placeholder, Placeholders.builder().build())
     );
   }
 }

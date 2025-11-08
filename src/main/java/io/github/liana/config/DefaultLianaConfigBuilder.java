@@ -5,7 +5,6 @@ import static java.util.Objects.requireNonNull;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Builder for creating customized {@link ConfigManager} instances.
@@ -32,17 +31,6 @@ public final class DefaultLianaConfigBuilder implements LianaConfigBuilder {
   private final JacksonMappers jacksonMappers = JacksonMappers.create();
   private final List<ConfigProvider> providers = new ArrayList<>();
   private final List<ConfigLoader> loaders = new ArrayList<>();
-
-  /**
-   * Creates a new builder preconfigured with default loaders and providers.
-   */
-  DefaultLianaConfigBuilder() {
-    providers.add(new ClasspathProvider(new ClasspathResource()));
-    loaders.add(new PropertiesLoader(new JacksonParser(jacksonMappers.getProperties())));
-    loaders.add(new YamlLoader(new JacksonParser(jacksonMappers.getYaml())));
-    loaders.add(new JsonLoader(new JacksonParser(jacksonMappers.getJson())));
-    loaders.add(new XmlLoader(new JacksonParser(jacksonMappers.getXml())));
-  }
 
   /**
    * Adds additional configuration providers to this builder.
@@ -77,22 +65,9 @@ public final class DefaultLianaConfigBuilder implements LianaConfigBuilder {
    */
   @Override
   public ConfigManager build() {
-    final KeyNormalizer<String> keyNormalizer = key -> key.toLowerCase(Locale.ROOT);
-
-    StrategyRegistry<String, ConfigProvider> providerRegistry = new StrategyRegistry<>(
-        keyNormalizer, providers
-    );
-
-    StrategyRegistry<String, ConfigLoader> loaderRegistry = new StrategyRegistry<>(
-        keyNormalizer, loaders
-    );
-
-    ConfigResourceProvider provider = ConfigResourceProvider.of(providerRegistry);
-    ConfigResourceLoader loader = ConfigResourceLoader.of(loaderRegistry);
-
     return new DefaultConfigManager(
-        new LoadingCache<>(),
-        new ConfigResourceProcessor(provider, loader),
+        new ProvidersRegistry(providers),
+        new LoadersRegistry(loaders, jacksonMappers),
         new JacksonMerger(jacksonMappers.getJson()),
         new JacksonInterpolator(jacksonMappers.getJson())
     );

@@ -24,12 +24,14 @@ class DefaultConfigResourceLocationTest {
   @Test
   @DisplayName("should construct with valid values and return them via getters")
   void shouldConstructAndReturnValues() {
+    var baseDirectories = ImmutableConfigSet.of(Set.of("config"));
     var resourceNames = ImmutableConfigSet.of(Set.of("config.yml", "secrets.yml"));
     var variables = ImmutableConfigMap.of(Map.of("env", "prod"));
     final String PROVIDER = "classpath";
 
     ConfigResourceLocation location = new DefaultConfigResourceLocation(
         PROVIDER,
+        baseDirectories,
         resourceNames,
         variables,
         true,
@@ -37,6 +39,7 @@ class DefaultConfigResourceLocationTest {
     );
 
     assertEquals(PROVIDER, location.getProvider());
+    assertEquals(baseDirectories, location.getBaseDirectories());
     assertEquals(resourceNames, location.getResourceNames());
     assertEquals(variables, location.getVariables());
     assertTrue(location.isVerboseLogging());
@@ -46,42 +49,62 @@ class DefaultConfigResourceLocationTest {
   @Test
   @DisplayName("should throw NullPointerException when provider is null")
   void shouldThrowWhenProviderIsNull() {
+    var baseDirectories = ImmutableConfigSet.of(Set.of("config"));
     var resourceNames = ImmutableConfigSet.of(Set.of("config.yml"));
     var variables = ImmutableConfigMap.of(Map.of("env", "prod"));
 
     assertThrows(NullPointerException.class, () ->
-        new DefaultConfigResourceLocation(null, resourceNames, variables, false, placeholder)
+        new DefaultConfigResourceLocation(null, baseDirectories, resourceNames, variables, false,
+            placeholder)
+    );
+  }
+
+  @Test
+  @DisplayName("should throw NullPointerException when baseDirectories is null")
+  void shouldThrowWhenBaseDirectoriesIsNull() {
+    var resourceNames = ImmutableConfigSet.of(Set.of("config.yml"));
+    var variables = ImmutableConfigMap.of(Map.of("env", "prod"));
+
+    assertThrows(NullPointerException.class, () ->
+        new DefaultConfigResourceLocation("classpath", null, resourceNames, variables, false,
+            placeholder)
     );
   }
 
   @Test
   @DisplayName("should throw NullPointerException when resourceNames is null")
   void shouldThrowWhenResourceNamesIsNull() {
+    var baseDirectories = ImmutableConfigSet.of(Set.of("config"));
     var variables = ImmutableConfigMap.of(Map.of("env", "prod"));
 
     assertThrows(NullPointerException.class, () ->
-        new DefaultConfigResourceLocation("classpath", null, variables, false, placeholder)
+        new DefaultConfigResourceLocation("classpath", baseDirectories, null, variables, false,
+            placeholder)
     );
   }
 
   @Test
   @DisplayName("should throw NullPointerException when variables is null")
   void shouldThrowWhenVariablesIsNull() {
+    var baseDirectories = ImmutableConfigSet.of(Set.of("config"));
     var resourceNames = ImmutableConfigSet.of(Set.of("config.yml"));
 
     assertThrows(NullPointerException.class, () ->
-        new DefaultConfigResourceLocation("classpath", resourceNames, null, false, placeholder)
+        new DefaultConfigResourceLocation("classpath", baseDirectories, resourceNames, null, false,
+            placeholder)
     );
   }
 
   @Test
   @DisplayName("should throw NullPointerException when placeholderResolver is null")
   void shouldThrowWhenPlaceholderResolverIsNull() {
+    var baseDirectories = ImmutableConfigSet.of(Set.of("config"));
     var resourceNames = ImmutableConfigSet.of(Set.of("config.yml"));
     var variables = ImmutableConfigMap.of(Map.of("env", "prod"));
 
     assertThrows(NullPointerException.class, () ->
-        new DefaultConfigResourceLocation("classpath", resourceNames, variables, false, null)
+        new DefaultConfigResourceLocation("classpath", baseDirectories, resourceNames, variables,
+            false, null)
     );
   }
 }

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.liana.config.exception.ConversionException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -25,18 +26,33 @@ import java.util.Optional;
 final class JacksonValueResolver extends AbstractJacksonComponent implements ValueResolver {
 
   private static final String MSG_SOURCE_NULL = "source must not be null";
+  private static final String MSG_INPUT_STREAM_NULL = "inputStream must not be null";
   private static final String MSG_KEY_NULL = "key must not be null";
   private static final String MSG_TARGET_TYPE_NULL = "target type must not be null";
   private static final String MSG_INVALID_TARGET_LIST_TYPE = "invalid or unsupported target list type: %s";
   private static final String MSG_INVALID_TARGET_MAP_TYPE = "invalid or unsupported target map type: %s";
   private static final String MSG_INVALID_TARGET_TYPE = "invalid or unsupported target type: %s";
   private static final String MSG_INVALID_JSON_POINTER = "invalid JSON pointer generated from key: %s";
-  private static final String MSG_CONVERT_SOURCE_TO_TREE =
-      "failed to convert source to JSON tree. Source type: %s";
   private static final String MSG_CONVERT_VALUE =
       "failed to convert value to target type: %s";
+  private static final ObjectMapper DEFAULT_MAPPER = JacksonMappers.create().getJson();
   private final LoadingCache<String, JsonNode> cache = new LoadingCache<>();
-  private final Map<String, Object> source;
+  private final JsonNode source;
+
+  /**
+   * Creates a new resolver using a custom {@link ObjectMapper} and JSON {@link InputStream}.
+   *
+   * @param mapper      the {@link ObjectMapper} to use (must not be null)
+   * @param inputStream the {@link InputStream} containing JSON data (must not be null)
+   * @throws NullPointerException if any argument is null
+   * @throws ConversionException  if reading or parsing the JSON fails
+   */
+  JacksonValueResolver(ObjectMapper mapper, InputStream inputStream) {
+    super(mapper);
+    this.source = executeWithResult(
+        () -> mapper.readTree(requireNonNull(inputStream, MSG_INPUT_STREAM_NULL)),
+        String.format(MSG_CONVERT_VALUE, inputStream.getClass().getTypeName()));
+  }
 
   /**
    * Creates a new {@code JacksonValueResolver} from the given source map.
@@ -46,15 +62,14 @@ final class JacksonValueResolver extends AbstractJacksonComponent implements Val
    * @throws ConversionException  if the source cannot be converted into a JSON tree
    */
   JacksonValueResolver(Map<String, Object> source) {
-    this(JacksonMappers.create().getJson(), source);
+    this(DEFAULT_MAPPER, source);
   }
 
   /**
    * Creates a new {@code JacksonValueResolver} with a custom {@link ObjectMapper}.
    *
    * <p>This constructor allows specifying a custom mapper for advanced
-   * serialization/deserialization
-   * behavior.
+   * serialization/deserialization behavior.
    *
    * @param mapper the {@link ObjectMapper} to use (must not be {@code null})
    * @param source the source configuration map (must not be {@code null})
@@ -63,9 +78,9 @@ final class JacksonValueResolver extends AbstractJacksonComponent implements Val
    */
   JacksonValueResolver(ObjectMapper mapper, Map<String, Object> source) {
     super(mapper);
-    this.source = Collections.unmodifiableMap(new LinkedHashMap<>(
-        requireNonNull(source, MSG_SOURCE_NULL)
-    ));
+    this.source = executeWithResult(
+        () -> mapper.valueToTree(requireNonNull(source, MSG_SOURCE_NULL)),
+        String.format(MSG_CONVERT_VALUE, source.getClass().getTypeName()));
   }
 
   /**
@@ -83,6 +98,7 @@ final class JacksonValueResolver extends AbstractJacksonComponent implements Val
    */
   @Override
   public <T> Optional<T> get(String key, Type targetType) {
+    System.out.println("esta es la key: " + key);
     requireNonNull(key, MSG_KEY_NULL);
     requireNonNull(targetType, MSG_TARGET_TYPE_NULL);
 
@@ -142,7 +158,8 @@ final class JacksonValueResolver extends AbstractJacksonComponent implements Val
    */
   @Override
   public Map<String, Object> getRootAsMap() {
-    return source;
+    JavaType type = constructJavaType(MAP_TYPE.getType());
+    return Collections.unmodifiableMap(new LinkedHashMap<>(convertValue(source, type)));
   }
 
   /**
@@ -169,11 +186,7 @@ final class JacksonValueResolver extends AbstractJacksonComponent implements Val
   }
 
   private JsonNode getRootNode() {
-    return cache.getOrCompute("ROOT_NODE",
-        () -> executeWithResult(
-            () -> mapper.valueToTree(source),
-            String.format(MSG_CONVERT_SOURCE_TO_TREE, source.getClass().getName())
-        ));
+    return cache.getOrCompute("__ROOT__", () -> source);
   }
 
   private JavaType constructJavaType(Type targetType) {

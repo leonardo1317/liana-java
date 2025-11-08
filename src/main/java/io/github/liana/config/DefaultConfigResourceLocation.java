@@ -41,6 +41,7 @@ import io.github.liana.internal.ImmutableConfigSet;
 class DefaultConfigResourceLocation implements ConfigResourceLocation {
 
   private final String provider;
+  private final ImmutableConfigSet baseDirectories;
   private final ImmutableConfigSet resourceNames;
   private final ImmutableConfigMap variables;
   private final boolean verboseLogging;
@@ -59,12 +60,14 @@ class DefaultConfigResourceLocation implements ConfigResourceLocation {
    * @throws NullPointerException if any argument except {@code verboseLogging} is {@code null}
    */
   public DefaultConfigResourceLocation(String provider,
+      ImmutableConfigSet baseDirectories,
       ImmutableConfigSet resourceNames,
       ImmutableConfigMap variables,
       boolean verboseLogging,
       Placeholder placeholder
   ) {
     this.provider = requireNonNull(provider, "provider must not be null");
+    this.baseDirectories = requireNonNull(baseDirectories, "baseDirectories must not be null");
     this.resourceNames = requireNonNull(resourceNames, "resourceNames must not be null");
     this.variables = requireNonNull(variables, "variables must not be null");
     this.verboseLogging = verboseLogging;
@@ -79,6 +82,11 @@ class DefaultConfigResourceLocation implements ConfigResourceLocation {
   @Override
   public String getProvider() {
     return provider;
+  }
+
+  @Override
+  public ImmutableConfigSet getBaseDirectories() {
+    return baseDirectories;
   }
 
   /**

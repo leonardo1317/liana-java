@@ -6,7 +6,6 @@
  *
  * <p><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache-2.0</a>
  */
-
 package io.github.liana.config;
 
 /**
@@ -29,7 +28,10 @@ package io.github.liana.config;
  */
 public final class LianaConfig {
 
-  private static final ConfigManager INSTANCE = builder().build();
+  private static class Holder {
+
+    private static final ConfigManager INSTANCE = builder().build();
+  }
 
   private LianaConfig() {
   }
@@ -40,7 +42,7 @@ public final class LianaConfig {
    * @return the default configuration manager instance
    */
   public static ConfigManager getInstance() {
-    return INSTANCE;
+    return Holder.INSTANCE;
   }
 
   /**

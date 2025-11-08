@@ -11,7 +11,6 @@ import io.github.liana.config.exception.ConversionException;
 import io.github.liana.config.exception.MergeException;
 import java.io.IOException;
 import java.util.Map;
-import java.util.function.Supplier;
 
 abstract class AbstractJacksonComponent {
 
@@ -39,13 +38,15 @@ abstract class AbstractJacksonComponent {
    * @throws ConversionException if the conversion fails
    * @throws RuntimeException    if an unexpected runtime exception occurs during the conversion
    */
-  protected <T> T executeWithResult(Supplier<T> supplier, String errorMessage) {
+  protected <T> T executeWithResult(ThrowingSupplier<T> supplier, String errorMessage) {
     try {
       return supplier.get();
-    } catch (IllegalArgumentException e) {
+    } catch (IOException | IllegalArgumentException e) {
       throw new ConversionException(errorMessage, e);
     } catch (RuntimeException e) {
-      throw new ConversionException("unexpected error during ", e);
+      throw new ConversionException("unexpected runtime error during operation", e);
+    } catch (Exception e) {
+      throw new ConversionException("unexpected checked exception during operation", e);
     }
   }
 
@@ -55,7 +56,7 @@ abstract class AbstractJacksonComponent {
     } catch (IOException e) {
       throw new MergeException(errorMessage, e);
     } catch (Exception e) {
-      throw new MergeException("unexpected error during ", e);
+      throw new MergeException("unexpected error during operation", e);
     }
   }
 }

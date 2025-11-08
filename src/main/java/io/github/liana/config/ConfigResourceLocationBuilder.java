@@ -7,6 +7,8 @@ public interface ConfigResourceLocationBuilder {
 
   ConfigResourceLocationBuilder provider(String provider);
 
+  ConfigResourceLocationBuilder baseDirectories(String... baseDirectories);
+
   ConfigResourceLocationBuilder addResource(String resourceName);
 
   ConfigResourceLocationBuilder addResources(String... resources);

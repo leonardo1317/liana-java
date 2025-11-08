@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -58,7 +59,7 @@ class ClasspathResourceTest {
     URL mockUrl = mock(URL.class);
     when(classLoader.getResource("test.yml")).thenReturn(mockUrl);
 
-    resource = new ClasspathResource(classLoader);
+    resource = new ClasspathResource(classLoader, List.of("", "config"));
 
     assertTrue(resource.resourceExists("test.yml"));
 
@@ -73,7 +74,7 @@ class ClasspathResourceTest {
     when(classLoader.getResource("test.yml")).thenReturn(null);
     when(classLoader.getResource("config/test.yml")).thenReturn(mockUrl);
 
-    resource = new ClasspathResource(classLoader);
+    resource = new ClasspathResource(classLoader, List.of("", "config"));
 
     assertTrue(resource.resourceExists("test.yml"));
     verify(classLoader).getResource("config/test.yml");
@@ -84,7 +85,7 @@ class ClasspathResourceTest {
   void shouldReturnFalseWhenResourceNotFoundInAnyPath() {
     when(classLoader.getResource(anyString())).thenReturn(null);
 
-    resource = new ClasspathResource(classLoader);
+    resource = new ClasspathResource(classLoader, List.of("", "config"));
 
     assertFalse(resource.resourceExists("test.yml"));
     verify(classLoader, times(2)).getResource(anyString());
@@ -111,7 +112,7 @@ class ClasspathResourceTest {
 
     when(classLoader.getResourceAsStream("test.yml")).thenReturn(mockStream);
 
-    resource = new ClasspathResource(classLoader);
+    resource = new ClasspathResource(classLoader, List.of("", "config"));
 
     InputStream result = resource.getResourceAsStream("test.yml");
 
@@ -130,7 +131,7 @@ class ClasspathResourceTest {
     when(classLoader.getResourceAsStream("test.yml")).thenReturn(null);
     when(classLoader.getResourceAsStream("config/test.yml")).thenReturn(mockStream);
 
-    resource = new ClasspathResource(classLoader);
+    resource = new ClasspathResource(classLoader, List.of("", "config"));
 
     InputStream result = resource.getResourceAsStream("test.yml");
 
@@ -145,7 +146,7 @@ class ClasspathResourceTest {
   void shouldReturnNullWhenResourceNotFoundInAnySearchPath() {
     when(classLoader.getResourceAsStream(anyString())).thenReturn(null);
 
-    resource = new ClasspathResource(classLoader);
+    resource = new ClasspathResource(classLoader, List.of("", "config"));
 
     assertNull(resource.getResourceAsStream("test.yml"));
     verify(classLoader, times(2)).getResourceAsStream(anyString());
@@ -159,7 +160,7 @@ class ClasspathResourceTest {
     when(classLoader.getResource("test.yml")).thenReturn(null);
     when(classLoader.getResource("config/test.yml")).thenReturn(mockUrl);
 
-    resource = new ClasspathResource(classLoader);
+    resource = new ClasspathResource(classLoader, List.of("", "config"));
 
     resource.resourceExists("test.yml");
 

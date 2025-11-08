@@ -1,5 +1,6 @@
 package io.github.liana.config;
 
+import static io.github.liana.internal.StringUtils.requireNonBlank;
 import static java.util.Objects.requireNonNull;
 
 import java.lang.reflect.Type;
@@ -20,6 +21,11 @@ import java.util.Optional;
  */
 abstract class AbstractConfiguration implements Configuration {
 
+  private static final String KEY_NULL_MSG = "key must not be null";
+  private static final String KEY_BLANK_MSG = "key must not be blank";
+  private static final String CLAZZ_NULL_MSG = "clazz must not be null";
+  private static final String TYPE_NULL_MSG = "type must not be null";
+
   private final ValueResolver resolver;
 
   /**
@@ -37,6 +43,8 @@ abstract class AbstractConfiguration implements Configuration {
    */
   @Override
   public boolean containsKey(String key) {
+    requireNonNull(key, KEY_NULL_MSG);
+    requireNonBlank(key, KEY_BLANK_MSG);
     return resolver.containsKey(key);
   }
 
@@ -44,11 +52,26 @@ abstract class AbstractConfiguration implements Configuration {
    * {@inheritDoc}
    *
    * <p>Delegates directly to the underlying {@link ValueResolver}, supporting complex and generic
-   * type resolution such as lists, maps, and POJOs.
+   * class resolution such as lists, maps, and POJOs.
    */
   @Override
-  public <T> Optional<T> get(String key, Type type) {
-    return resolver.get(key, type);
+  public <T> Optional<T> get(String key, Class<T> clazz) {
+    requireNonNull(key, KEY_NULL_MSG);
+    requireNonBlank(key, KEY_BLANK_MSG);
+    requireNonNull(clazz, CLAZZ_NULL_MSG);
+    return resolver.get(key, clazz);
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   */
+  @Override
+  public <T> Optional<T> get(String key, TypeOf<T> type) {
+    requireNonNull(key, KEY_NULL_MSG);
+    requireNonBlank(key, KEY_BLANK_MSG);
+    requireNonNull(type, TYPE_NULL_MSG);
+    return resolver.get(key, type.getType());
   }
 
   /**
@@ -59,6 +82,9 @@ abstract class AbstractConfiguration implements Configuration {
    */
   @Override
   public <E> List<E> getList(String key, Class<E> clazz) {
+    requireNonNull(key, KEY_NULL_MSG);
+    requireNonBlank(key, KEY_BLANK_MSG);
+    requireNonNull(clazz, CLAZZ_NULL_MSG);
     List<E> result = resolver.getList(key, clazz);
     return result.isEmpty() ? Collections.emptyList() : List.copyOf(result);
   }
@@ -71,6 +97,9 @@ abstract class AbstractConfiguration implements Configuration {
    */
   @Override
   public <V> Map<String, V> getMap(String key, Class<V> clazz) {
+    requireNonNull(key, KEY_NULL_MSG);
+    requireNonBlank(key, KEY_BLANK_MSG);
+    requireNonNull(clazz, CLAZZ_NULL_MSG);
     Map<String, V> result = resolver.getMap(key, clazz);
     return result.isEmpty() ? Collections.emptyMap() : Collections.unmodifiableMap(result);
   }
@@ -102,6 +131,7 @@ abstract class AbstractConfiguration implements Configuration {
    */
   @Override
   public <T> Optional<T> getRootAs(Type type) {
+    requireNonNull(type, TYPE_NULL_MSG);
     return resolver.getRootAs(type);
   }
 }

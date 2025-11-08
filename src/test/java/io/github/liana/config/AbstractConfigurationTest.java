@@ -25,6 +25,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -79,8 +81,14 @@ class AbstractConfigurationTest {
     @Test
     @DisplayName("should throw NullPointerException when key is null")
     void shouldThrowNullPointerExceptionWhenKeyIsNull() {
-      when(resolver.containsKey(eq(null))).thenThrow(new NullPointerException("null key"));
       assertThrows(NullPointerException.class, () -> configuration.containsKey(null));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\t", "\n"})
+    @DisplayName("should throw IllegalArgumentException when key is blank")
+    void shouldThrowWhenKeyIsBlank(String key) {
+      assertThrows(IllegalArgumentException.class, () -> configuration.containsKey(key));
     }
 
     @Test
@@ -92,7 +100,7 @@ class AbstractConfigurationTest {
   }
 
   @Nested
-  @DisplayName("get(key, Type) method")
+  @DisplayName("get(key, Class) method")
   final class GetMethodTests {
 
     @Test
@@ -126,6 +134,39 @@ class AbstractConfigurationTest {
     }
 
     @Test
+    @DisplayName("should throw NullPointerException when key is null")
+    void shouldThrowNullPointerExceptionWhenKeyIsNull() {
+      assertThrows(NullPointerException.class, () -> configuration.get(null, String.class));
+    }
+
+    @Test
+    @DisplayName("should throw NullPointerException when type is null")
+    void shouldThrowNullPointerExceptionWhenTypeIsNull() {
+      Class<String> value = null;
+      assertThrows(NullPointerException.class, () -> configuration.get("key", value));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\t", "\n"})
+    @DisplayName("should throw IllegalArgumentException when key is blank")
+    void shouldThrowWhenKeyIsBlank(String key) {
+      assertThrows(IllegalArgumentException.class, () -> configuration.get(key, String.class));
+    }
+
+    @Test
+    @DisplayName("should propagate ConversionException from resolver")
+    void shouldPropagateConversionExceptionFromResolver() {
+      when(resolver.get(anyString(), any())).thenThrow(new ConversionException("bad type"));
+      assertThrows(ConversionException.class, () -> configuration.get("invalid", String.class));
+    }
+  }
+
+
+  @Nested
+  @DisplayName("get(key, Type) method")
+  final class GetTypeMethodTests {
+
+    @Test
     @DisplayName("should support List<AppConfig>")
     void shouldSupportListOfPojo() {
       record AppConfig(String url, int timeout) {
@@ -133,19 +174,19 @@ class AbstractConfigurationTest {
       }
 
       var type = new TypeOf<List<AppConfig>>() {
-      }.getType();
+      };
       List<AppConfig> expected = List.of(
           new AppConfig("http://localhost", 1000),
           new AppConfig("http://localhost", 2000)
       );
 
-      doReturn(Optional.of(expected)).when(resolver).get(anyString(), eq(type));
+      doReturn(Optional.of(expected)).when(resolver).get(anyString(), eq(type.getType()));
 
       Optional<List<AppConfig>> result = configuration.get("configs", type);
 
       assertTrue(result.isPresent());
       assertEquals(expected, result.get());
-      verify(resolver).get(anyString(), eq(type));
+      verify(resolver).get(anyString(), eq(type.getType()));
     }
 
     @Test
@@ -156,19 +197,19 @@ class AbstractConfigurationTest {
       }
 
       var type = new TypeOf<Map<String, AppConfig>>() {
-      }.getType();
+      };
       Map<String, AppConfig> expected = Map.of(
           "serviceA", new AppConfig("http://localhost", 1000),
           "serviceB", new AppConfig("http://localhost", 2000)
       );
 
-      doReturn(Optional.of(expected)).when(resolver).get(anyString(), eq(type));
+      doReturn(Optional.of(expected)).when(resolver).get(anyString(), eq(type.getType()));
 
       Optional<Map<String, AppConfig>> result = configuration.get("services", type);
 
       assertTrue(result.isPresent());
       assertEquals(expected, result.get());
-      verify(resolver).get(anyString(), eq(type));
+      verify(resolver).get(anyString(), eq(type.getType()));
     }
 
     @Test
@@ -179,7 +220,7 @@ class AbstractConfigurationTest {
       }
 
       var type = new TypeOf<Map<String, List<AppConfig>>>() {
-      }.getType();
+      };
       Map<String, List<AppConfig>> expected = Map.of(
           "clients",
           List.of(new AppConfig("http://localhost", 1000),
@@ -187,13 +228,13 @@ class AbstractConfigurationTest {
           )
       );
 
-      doReturn(Optional.of(expected)).when(resolver).get(anyString(), eq(type));
+      doReturn(Optional.of(expected)).when(resolver).get(anyString(), eq(type.getType()));
 
       Optional<Map<String, List<AppConfig>>> result = configuration.get("clients", type);
 
       assertTrue(result.isPresent());
       assertEquals(expected, result.get());
-      verify(resolver).get(anyString(), eq(type));
+      verify(resolver).get(anyString(), eq(type.getType()));
     }
 
     @Test
@@ -204,19 +245,19 @@ class AbstractConfigurationTest {
       }
 
       var type = new TypeOf<List<Map<String, AppConfig>>>() {
-      }.getType();
+      };
       List<Map<String, AppConfig>> expected = List.of(
           Map.of("serviceA", new AppConfig("http://localhost", 1000)),
           Map.of("serviceB", new AppConfig("http://localhost", 2000))
       );
 
-      doReturn(Optional.of(expected)).when(resolver).get(anyString(), eq(type));
+      doReturn(Optional.of(expected)).when(resolver).get(anyString(), eq(type.getType()));
 
       Optional<List<Map<String, AppConfig>>> result = configuration.get("serviceGroups", type);
 
       assertTrue(result.isPresent());
       assertEquals(expected, result.get());
-      verify(resolver).get(anyString(), eq(type));
+      verify(resolver).get(anyString(), eq(type.getType()));
     }
 
     @Test
@@ -227,41 +268,51 @@ class AbstractConfigurationTest {
       }
 
       var type = new TypeOf<Map<String, Map<String, AppConfig>>>() {
-      }.getType();
+      };
       Map<String, Map<String, AppConfig>> expected = Map.of(
           "region1", Map.of("clientA", new AppConfig("http://localhost", 1000)),
           "region2", Map.of("clientB", new AppConfig("http://localhost", 2000))
       );
 
-      doReturn(Optional.of(expected)).when(resolver).get(anyString(), eq(type));
+      doReturn(Optional.of(expected)).when(resolver).get(anyString(), eq(type.getType()));
 
       Optional<Map<String, Map<String, AppConfig>>> result = configuration.get("regions", type);
 
       assertTrue(result.isPresent());
       assertEquals(expected, result.get());
-      verify(resolver).get(anyString(), eq(type));
+      verify(resolver).get(anyString(), eq(type.getType()));
     }
 
     @Test
     @DisplayName("should throw NullPointerException when key is null")
     void shouldThrowNullPointerExceptionWhenKeyIsNull() {
-      when(resolver.get(eq(null), eq(String.class))).thenThrow(
-          new NullPointerException("key null"));
-      assertThrows(NullPointerException.class, () -> configuration.get(null, String.class));
+      assertThrows(NullPointerException.class, () -> configuration.get(null, new TypeOf<String>() {
+      }));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\t", "\n"})
+    @DisplayName("should throw IllegalArgumentException when key is blank")
+    void shouldThrowWhenKeyIsBlank(String key) {
+      assertThrows(IllegalArgumentException.class,
+          () -> configuration.get(key, new TypeOf<String>() {
+          }));
     }
 
     @Test
     @DisplayName("should throw NullPointerException when type is null")
     void shouldThrowNullPointerExceptionWhenTypeIsNull() {
-      when(resolver.get(anyString(), eq(null))).thenThrow(new NullPointerException("type null"));
-      assertThrows(NullPointerException.class, () -> configuration.get("key", null));
+      TypeOf<String> value = null;
+      assertThrows(NullPointerException.class, () -> configuration.get("key", value));
     }
 
     @Test
     @DisplayName("should propagate ConversionException from resolver")
     void shouldPropagateConversionExceptionFromResolver() {
       when(resolver.get(anyString(), any())).thenThrow(new ConversionException("bad type"));
-      assertThrows(ConversionException.class, () -> configuration.get("invalid", String.class));
+      assertThrows(ConversionException.class,
+          () -> configuration.get("invalid", new TypeOf<String>() {
+          }));
     }
   }
 
@@ -297,15 +348,19 @@ class AbstractConfigurationTest {
     @Test
     @DisplayName("should throw NullPointerException when key is null")
     void shouldThrowNullPointerWhenKeyIsNull() {
-      when(resolver.getList(eq(null), eq(String.class))).thenThrow(
-          new NullPointerException("key null"));
       assertThrows(NullPointerException.class, () -> configuration.getList(null, String.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\t", "\n"})
+    @DisplayName("should throw IllegalArgumentException when key is blank")
+    void shouldThrowWhenKeyIsBlank(String key) {
+      assertThrows(IllegalArgumentException.class, () -> configuration.getList(key, String.class));
     }
 
     @Test
     @DisplayName("should throw NullPointerException when class is null")
     void shouldThrowNullPointerWhenClassIsNull() {
-      when(resolver.getList(anyString(), eq(null))).thenThrow(new NullPointerException("key null"));
       assertThrows(NullPointerException.class, () -> configuration.getList("env", null));
     }
 
@@ -352,16 +407,19 @@ class AbstractConfigurationTest {
     @Test
     @DisplayName("should throw NullPointerException when key is null")
     void shouldThrowNullPointerExceptionWhenKeyIsNull() {
-      when(resolver.getMap(eq(null), eq(String.class))).thenThrow(
-          new NullPointerException("key null"));
       assertThrows(NullPointerException.class, () -> configuration.getMap(null, String.class));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", "   ", "\t", "\n"})
+    @DisplayName("should throw IllegalArgumentException when key is blank")
+    void shouldThrowWhenKeyIsBlank(String key) {
+      assertThrows(IllegalArgumentException.class, () -> configuration.getMap(key, String.class));
     }
 
     @Test
     @DisplayName("should throw NullPointerException when class is null")
     void shouldThrowNullPointerExceptionWhenClassIsNull() {
-      when(resolver.getMap(anyString(), eq(null))).thenThrow(
-          new NullPointerException("type null"));
       assertThrows(NullPointerException.class, () -> configuration.getMap("env", null));
     }
 
@@ -461,7 +519,6 @@ class AbstractConfigurationTest {
     @Test
     @DisplayName("should throw NullPointerException when type is null")
     void shouldThrowNullPointerExceptionWhenTypeIsNull() {
-      when(resolver.getRootAs(eq(null))).thenThrow(new NullPointerException("type null"));
       assertThrows(NullPointerException.class, () -> configuration.getRootAs(null));
     }
 

@@ -17,7 +17,6 @@ import io.github.liana.config.exception.ConversionException;
 import io.github.liana.config.exception.MergeException;
 import java.io.IOException;
 import java.util.Map;
-import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -61,7 +60,7 @@ class AbstractJacksonComponentTest {
   @Test
   @DisplayName("should execute supplier successfully and return result")
   void shouldExecuteSupplierSuccessfullyAndReturnResult() {
-    Supplier<String> supplier = () -> "result";
+    ThrowingSupplier<String> supplier = () -> "result";
 
     String result = component.executeWithResult(supplier, "error message");
 
@@ -69,9 +68,25 @@ class AbstractJacksonComponentTest {
   }
 
   @Test
+  @DisplayName("should throw ConversionException when supplier throws IOException")
+  void shouldThrowConversionExceptionWhenSupplierThrowsIOException() {
+    ThrowingSupplier<String> supplier = () -> {
+      throw new IOException("I/O error occurred");
+    };
+
+    ConversionException exception = assertThrows(
+        ConversionException.class,
+        () -> component.executeWithResult(supplier, "I/O operation failed")
+    );
+
+    assertTrue(exception.getMessage().contains("I/O operation failed"));
+    assertInstanceOf(IOException.class, exception.getCause());
+  }
+
+  @Test
   @DisplayName("should throw ConversionException when supplier throws IllegalArgumentException")
   void shouldThrowConversionExceptionWhenSupplierThrowsIllegalArgumentException() {
-    Supplier<String> supplier = () -> {
+    ThrowingSupplier<String> supplier = () -> {
       throw new IllegalArgumentException("invalid");
     };
 
@@ -87,7 +102,7 @@ class AbstractJacksonComponentTest {
   @Test
   @DisplayName("should throw ConversionException when supplier throws unexpected runtime exception")
   void shouldThrowConversionExceptionWhenSupplierThrowsUnexpectedRuntimeException() {
-    Supplier<String> supplier = () -> {
+    ThrowingSupplier<String> supplier = () -> {
       throw new RuntimeException("error");
     };
 
@@ -96,8 +111,24 @@ class AbstractJacksonComponentTest {
         () -> component.executeWithResult(supplier, "unexpected error")
     );
 
-    assertTrue(exception.getMessage().contains("unexpected error during"));
+    assertTrue(exception.getMessage().contains("unexpected runtime error during operation"));
     assertInstanceOf(RuntimeException.class, exception.getCause());
+  }
+
+  @Test
+  @DisplayName("should throw ConversionException when supplier throws unexpected checked exception")
+  void shouldThrowConversionExceptionWhenSupplierThrowsUnexpectedCheckedException() {
+    ThrowingSupplier<String> supplier = () -> {
+      throw new Exception("unknown exception");
+    };
+
+    ConversionException exception = assertThrows(
+        ConversionException.class,
+        () -> component.executeWithResult(supplier, "unexpected error")
+    );
+
+    assertTrue(exception.getMessage().contains("unexpected checked exception during operation"));
+    assertInstanceOf(Exception.class, exception.getCause());
   }
 
   @Test

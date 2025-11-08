@@ -46,25 +46,35 @@ class ConfigResourceProcessorTest {
   @Mock
   private Configuration configuration;
 
+  @Mock
+  private ConfigResourcePreparer configResourcePreparer;
+
   private ConfigResourceProcessor processor;
 
   @BeforeEach
   void setUp() {
-    processor = new ConfigResourceProcessor(provider, loader);
+    processor = new ConfigResourceProcessor(provider, loader, configResourcePreparer);
   }
 
   @Test
   @DisplayName("should throw NullPointerException when provider is null")
   void shouldThrowWhenProviderIsNull() {
     assertThrows(NullPointerException.class,
-        () -> new ConfigResourceProcessor(null, loader));
+        () -> new ConfigResourceProcessor(null, loader, configResourcePreparer));
   }
 
   @Test
   @DisplayName("should throw NullPointerException when loader is null")
   void shouldThrowWhenLoaderIsNull() {
     assertThrows(NullPointerException.class,
-        () -> new ConfigResourceProcessor(provider, null));
+        () -> new ConfigResourceProcessor(provider, null, configResourcePreparer));
+  }
+
+  @Test
+  @DisplayName("should throw NullPointerException when configResourcePreparer is null")
+  void shouldThrowWhenConfigResourcePreparerIsNull() {
+    assertThrows(NullPointerException.class,
+        () -> new ConfigResourceProcessor(provider, loader, null));
   }
 
   @Test
@@ -99,18 +109,14 @@ class ConfigResourceProcessorTest {
     when(provider.resolve(reference)).thenReturn(resource);
     when(loader.loadFromResource(resource)).thenReturn(configuration);
     when(configuration.getRootAsMap()).thenReturn(configData);
+    when(configResourcePreparer.prepare()).thenReturn(List.of(reference));
 
-    try (MockedConstruction<ConfigResourcePreparer> ignored = mockConstruction(
-        ConfigResourcePreparer.class,
-        (mockPreparer, context) -> when(mockPreparer.prepare()).thenReturn(List.of(reference))
-    )) {
-      List<Map<String, Object>> result = processor.load(location);
+    List<Map<String, Object>> result = processor.load(location);
 
-      assertEquals(1, result.size());
-      assertEquals(configData, result.get(0));
-      verify(provider).resolve(reference);
-      verify(loader).loadFromResource(resource);
-    }
+    assertEquals(1, result.size());
+    assertEquals(configData, result.get(0));
+    verify(provider).resolve(reference);
+    verify(loader).loadFromResource(resource);
   }
 
   @Test
@@ -130,20 +136,15 @@ class ConfigResourceProcessorTest {
     when(provider.resolve(validRef)).thenReturn(resource);
     when(loader.loadFromResource(resource)).thenReturn(configuration);
     when(configuration.getRootAsMap()).thenReturn(expectedConfig);
+    when(configResourcePreparer.prepare()).thenReturn(references);
 
-    try (MockedConstruction<ConfigResourcePreparer> ignored = mockConstruction(
-        ConfigResourcePreparer.class,
-        (mockPreparer, context) -> when(mockPreparer.prepare()).thenReturn(references)
-    )) {
-
-      List<Map<String, Object>> result = processor.load(location);
-      assertNotNull(result);
-      assertEquals(1, result.size());
-      assertEquals(expectedConfig, result.get(0));
-      verify(provider, times(1)).resolve(validRef);
-      verify(loader, times(1)).loadFromResource(resource);
-      verifyNoMoreInteractions(provider, loader);
-    }
+    List<Map<String, Object>> result = processor.load(location);
+    assertNotNull(result);
+    assertEquals(1, result.size());
+    assertEquals(expectedConfig, result.get(0));
+    verify(provider, times(1)).resolve(validRef);
+    verify(loader, times(1)).loadFromResource(resource);
+    verifyNoMoreInteractions(provider);
   }
 
   @Test
@@ -168,14 +169,9 @@ class ConfigResourceProcessorTest {
   void shouldSkipInvalidReferenceWhenBlankProvider() {
     when(location.isVerboseLogging()).thenReturn(true);
     when(reference.provider()).thenReturn("");
-
-    try (MockedConstruction<ConfigResourcePreparer> ignored = mockConstruction(
-        ConfigResourcePreparer.class,
-        (mockPreparer, context) -> when(mockPreparer.prepare()).thenReturn(List.of(reference))
-    )) {
-      List<Map<String, Object>> result = processor.load(location);
-      assertTrue(result.isEmpty());
-    }
+    when(configResourcePreparer.prepare()).thenReturn(List.of(reference));
+    List<Map<String, Object>> result = processor.load(location);
+    assertTrue(result.isEmpty());
   }
 
   @Test
@@ -184,14 +180,10 @@ class ConfigResourceProcessorTest {
     when(location.isVerboseLogging()).thenReturn(true);
     when(reference.provider()).thenReturn("classpath");
     when(reference.resourceName()).thenReturn("");
+    when(configResourcePreparer.prepare()).thenReturn(List.of(reference));
 
-    try (MockedConstruction<ConfigResourcePreparer> ignored = mockConstruction(
-        ConfigResourcePreparer.class,
-        (mockPreparer, context) -> when(mockPreparer.prepare()).thenReturn(List.of(reference))
-    )) {
-      List<Map<String, Object>> result = processor.load(location);
-      assertTrue(result.isEmpty());
-    }
+    List<Map<String, Object>> result = processor.load(location);
+    assertTrue(result.isEmpty());
   }
 
   @Test
@@ -201,14 +193,10 @@ class ConfigResourceProcessorTest {
     when(reference.provider()).thenReturn("classpath");
     when(reference.resourceName()).thenReturn("prod.yaml");
     when(provider.resolve(reference)).thenThrow(new ConfigProviderException("provider fail"));
+    when(configResourcePreparer.prepare()).thenReturn(List.of(reference));
 
-    try (MockedConstruction<ConfigResourcePreparer> ignored = mockConstruction(
-        ConfigResourcePreparer.class,
-        (mockPreparer, context) -> when(mockPreparer.prepare()).thenReturn(List.of(reference))
-    )) {
-      List<Map<String, Object>> result = processor.load(location);
-      assertTrue(result.isEmpty());
-    }
+    List<Map<String, Object>> result = processor.load(location);
+    assertTrue(result.isEmpty());
   }
 
   @Test
@@ -220,14 +208,10 @@ class ConfigResourceProcessorTest {
 
     when(provider.resolve(reference)).thenReturn(resource);
     when(loader.loadFromResource(resource)).thenThrow(new ConfigLoaderException("load fail"));
+    when(configResourcePreparer.prepare()).thenReturn(List.of(reference));
 
-    try (MockedConstruction<ConfigResourcePreparer> ignored = mockConstruction(
-        ConfigResourcePreparer.class,
-        (mockPreparer, context) -> when(mockPreparer.prepare()).thenReturn(List.of(reference))
-    )) {
-      List<Map<String, Object>> result = processor.load(location);
-      assertTrue(result.isEmpty());
-    }
+    List<Map<String, Object>> result = processor.load(location);
+    assertTrue(result.isEmpty());
   }
 
   @Test
@@ -236,15 +220,10 @@ class ConfigResourceProcessorTest {
     when(location.isVerboseLogging()).thenReturn(true);
     when(reference.provider()).thenReturn("classpath");
     when(reference.resourceName()).thenReturn("prod.yaml");
-
     when(provider.resolve(reference)).thenThrow(new RuntimeException("unexpected error"));
+    when(configResourcePreparer.prepare()).thenReturn(List.of(reference));
 
-    try (MockedConstruction<ConfigResourcePreparer> ignored = mockConstruction(
-        ConfigResourcePreparer.class,
-        (mockPreparer, context) -> when(mockPreparer.prepare()).thenReturn(List.of(reference))
-    )) {
-      List<Map<String, Object>> result = processor.load(location);
-      assertTrue(result.isEmpty());
-    }
+    List<Map<String, Object>> result = processor.load(location);
+    assertTrue(result.isEmpty());
   }
 }

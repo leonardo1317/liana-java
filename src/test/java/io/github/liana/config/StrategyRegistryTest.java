@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -72,6 +73,31 @@ class StrategyRegistryTest {
     StrategyRegistry<String, ConfigLoader> registry = new StrategyRegistry<>(strategyJson);
 
     assertTrue(registry.get("yml").isEmpty());
+  }
+
+
+  @Test
+  @DisplayName("should return all registered keys when strategies are present")
+  void shouldReturnAllRegisteredKeys() {
+    ConfigLoader yamlLoader = mock(ConfigLoader.class);
+    ConfigLoader jsonLoader = mock(ConfigLoader.class);
+    when(yamlLoader.getKeys()).thenReturn(Set.of("yaml"));
+    when(jsonLoader.getKeys()).thenReturn(Set.of("json"));
+
+    StrategyRegistry<String, ConfigLoader> registry = new StrategyRegistry<>(yamlLoader, jsonLoader);
+    Set<String> actualKeys = registry.getAllKeys();
+
+    assertEquals(Set.of("yaml", "json"), actualKeys);
+  }
+
+  @Test
+  @DisplayName("should return empty set when no strategies are registered")
+  void shouldReturnEmptySetWhenNoStrategiesRegistered() {
+    StrategyRegistry<String, ConfigLoader> registry = new StrategyRegistry<>();
+
+    Set<String> actualKeys = registry.getAllKeys();
+
+    assertTrue(actualKeys.isEmpty());
   }
 
   @Test

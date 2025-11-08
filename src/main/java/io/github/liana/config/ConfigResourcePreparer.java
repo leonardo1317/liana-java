@@ -6,7 +6,6 @@
  *
  * <p><a href="http://www.apache.org/licenses/LICENSE-2.0">Apache-2.0</a>
  */
-
 package io.github.liana.config;
 
 import static io.github.liana.config.ConfigDefaults.BASE_RESOURCE_NAME;
@@ -40,33 +39,53 @@ import java.util.Optional;
  */
 class ConfigResourcePreparer {
 
-  private final ConfigLogger log;
   private final ConfigResourceLocation location;
   private final String profile;
-  private final ResourceLocator resourceLocator;
+  private final ResourceExtensionResolver resourceExtensionResolver;
+  private final ResourceNameValidator resourceNameValidator;
 
   /**
-   * Constructs a {@code ConfigResourcePreparer} using the given location and the profile from the
-   * environment variable.
+   * Constructs a {@code ConfigResourcePreparer} using the given location and the profile obtained
+   * from the environment variable {@code PROFILE_ENV_VAR}.
    *
-   * @param location the config resource location to resolve
+   * <p>This constructor is a convenience shortcut that automatically reads the profile from the
+   * current environment and uses the provided {@link ResourceExtensionResolver} and
+   * {@link ResourceNameValidator} to locate and validate resources.
+   *
+   * @param location                  the config resource location to resolve
+   * @param resourceExtensionResolver the resolver responsible for locating configuration resources
+   * @param resourceNameValidator     the validator used to verify that resource names and
+   *                                  extensions are safe
    */
-  public ConfigResourcePreparer(ConfigResourceLocation location) {
-    this(location, PropertySources.fromEnv().get(PROFILE_ENV_VAR), new ClasspathResource());
+  public ConfigResourcePreparer(ConfigResourceLocation location,
+      ResourceExtensionResolver resourceExtensionResolver,
+      ResourceNameValidator resourceNameValidator) {
+    this(location, PropertySources.fromEnv().get(PROFILE_ENV_VAR), resourceExtensionResolver,
+        resourceNameValidator);
   }
 
   /**
-   * Constructs a {@code ConfigResourcePreparer} using the given location and profile.
+   * Constructs a {@code ConfigResourcePreparer} using the given location, profile, resource
+   * resolver, and filename validator.
    *
-   * @param location the config resource location to resolve
-   * @param profile  the profile name to use for resolving default resources
+   * <p>This constructor provides full control over how configuration resources are resolved and
+   * validated.
+   *
+   * @param location                  the config resource location to resolve
+   * @param profile                   the profile name to use for resolving default resources
+   * @param resourceExtensionResolver the resolver responsible for locating configuration resources
+   * @param resourceNameValidator     the validator used to verify that resource names and
+   *                                  extensions are safe
    */
   public ConfigResourcePreparer(ConfigResourceLocation location, String profile,
-      ResourceLocator resourceLocator) {
-    this.location = requireNonNull(location, "ConfigResourceLocation must not be null");
+      ResourceExtensionResolver resourceExtensionResolver,
+      ResourceNameValidator resourceNameValidator) {
+    this.location = requireNonNull(location, "configResourceLocation must not be null");
     this.profile = defaultIfBlank(profile, DEFAULT_PROFILE);
-    this.log = ConsoleConfigLogger.getLogger();
-    this.resourceLocator = requireNonNull(resourceLocator, "ResourceLocator must not be null");
+    this.resourceExtensionResolver = requireNonNull(resourceExtensionResolver,
+        "resourceExtensionResolver must not be null");
+    this.resourceNameValidator = requireNonNull(resourceNameValidator,
+        "resourceNameValidator must not be null");
   }
 
   /**
@@ -140,14 +159,13 @@ class ConfigResourcePreparer {
   private List<String> resolveDefaultResources(Placeholder placeholder,
       Map<String, String> variableMap) {
     List<String> processedNames = new ArrayList<>();
-
-    findConfigResource(BASE_RESOURCE_NAME)
-        .filter(FilenameValidator::isSafeResourceName)
+    resourceExtensionResolver.findConfigResource(BASE_RESOURCE_NAME)
+        .filter(resourceNameValidator::isSafeResourceName)
         .ifPresent(processedNames::add);
 
     placeholder.replaceIfAllResolvable(BASE_RESOURCE_NAME_PATTERN, variableMap)
-        .flatMap(this::findConfigResource)
-        .filter(FilenameValidator::isSafeResourceName)
+        .flatMap(resourceExtensionResolver::findConfigResource)
+        .filter(resourceNameValidator::isSafeResourceName)
         .ifPresent(processedNames::add);
 
     return Collections.unmodifiableList(processedNames);
@@ -172,26 +190,8 @@ class ConfigResourcePreparer {
     return resourceNames.toSet().stream()
         .map(template -> placeholder.replaceIfAllResolvable(template, variableMap))
         .flatMap(Optional::stream)
-        .filter(FilenameValidator::isSafeResourceName)
+        .filter(resourceExtensionResolver::isExtensionAllowed)
+        .filter(resourceNameValidator::isSafeResourceName)
         .toList();
-  }
-
-  /**
-   * Attempts to find an existing configuration resource in the classpath with supported file
-   * extensions.
-   *
-   * @param baseResourceName the base name of the resource (without extension)
-   * @return an {@link Optional} containing the full resource name if found
-   */
-  private Optional<String> findConfigResource(String baseResourceName) {
-    return ConfigFileFormat.getAllSupportedExtensions().stream()
-        .map(extension -> baseResourceName + "." + extension)
-        .filter(resourceLocator::resourceExists)
-        .findFirst()
-        .or(() -> {
-          log.warn(
-              () -> "No standard config file found in classpath for base: " + baseResourceName);
-          return Optional.empty();
-        });
   }
 }

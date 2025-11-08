@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -57,7 +58,7 @@ class PropertiesLoaderTest {
 
     when(resource.inputStream()).thenReturn(input);
     when(resource.resourceName()).thenReturn("test.properties");
-    when(configuration.get(anyString(), any())).thenReturn(Optional.of("value"));
+    when(configuration.get(anyString(),  eq(String.class))).thenReturn(Optional.of("value"));
     when(configParser.parse(input)).thenReturn(configuration);
 
     Configuration config = loader.load(resource);

@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Default implementation of {@link ConfigManager} responsible for loading, merging, and
@@ -33,49 +34,82 @@ import java.util.Map;
 class DefaultConfigManager implements ConfigManager {
 
   private final LoadingCache<String, Map<String, Object>> cache;
-  private final ConfigResourceProcessor resourceProcessor;
+  private final ProvidersRegistry providers;
+  private final LoadersRegistry loaders;
   private final JacksonMerger merger;
   private final JacksonInterpolator interpolator;
 
   /**
-   * Creates a new {@code DefaultConfigManager} instance.
+   * Creates a new {@code DefaultConfigManager} instance with a fresh internal
+   * {@link LoadingCache}.
    *
-   * @param cache             the cache instance used to store merged configurations, must not be
-   *                          {@code null}
-   * @param resourceProcessor the processor used to load configuration resources, must not be
-   *                          {@code null}
-   * @param merger            the component responsible for merging configuration maps, must not be
-   *                          {@code null}
-   * @param interpolator      the component responsible for interpolating placeholders and
-   *                          variables, must not be {@code null}
-   * @throws NullPointerException if any argument is {@code null}
+   * <p>This is a convenience constructor for typical use cases where a custom cache
+   * is not needed. It delegates to
+   * {@link #DefaultConfigManager(LoadingCache, ProvidersRegistry, LoadersRegistry, JacksonMerger,
+   * JacksonInterpolator)} using a new empty {@code LoadingCache}.</p>
+   *
+   * @param providers    supplies default and custom {@link ConfigProvider} implementations
+   * @param loaders      supplies default and custom {@link ConfigLoader} implementations
+   * @param merger       the {@link JacksonMerger} responsible for merging multiple configuration
+   *                     maps
+   * @param interpolator the {@link JacksonInterpolator} used to resolve placeholders within
+   *                     configuration values
+   */
+  public DefaultConfigManager(ProvidersRegistry providers, LoadersRegistry loaders,
+      JacksonMerger merger, JacksonInterpolator interpolator) {
+    this(new LoadingCache<>(), providers, loaders, merger, interpolator);
+  }
+
+  /**
+   * Creates a new {@code DefaultConfigManager} using a provided cache and dependency set.
+   *
+   * @param cache        the {@link LoadingCache} used to store loaded configuration entries
+   * @param providers    supplies default and custom {@link ConfigProvider} implementations
+   * @param loaders      supplies default and custom {@link ConfigLoader} implementations
+   * @param merger       the {@link JacksonMerger} responsible for merging multiple configuration
+   *                     maps
+   * @param interpolator the {@link JacksonInterpolator} used to resolve placeholders within
+   *                     configuration values
    */
   public DefaultConfigManager(LoadingCache<String, Map<String, Object>> cache,
-      ConfigResourceProcessor resourceProcessor,
-      JacksonMerger merger,
+      ProvidersRegistry providers, LoadersRegistry loaders, JacksonMerger merger,
       JacksonInterpolator interpolator) {
     this.cache = requireNonNull(cache);
-    this.resourceProcessor = requireNonNull(resourceProcessor);
+    this.providers = requireNonNull(providers);
+    this.loaders = requireNonNull(loaders);
     this.merger = requireNonNull(merger);
     this.interpolator = requireNonNull(interpolator);
   }
 
   /**
-   * Loads and returns a {@link ConfigReader} for the given {@link ConfigResourceLocation}.
+   * Loads and returns a {@link Configuration} for the given {@link ConfigResourceLocation}.
    *
    * <p>If the configuration has already been loaded and cached, the cached version is returned.
    * Otherwise, the configuration is loaded, merged, interpolated, and stored in cache.
    *
    * @param location the configuration resource location, must not be {@code null}
-   * @return a {@link ConfigReader} for accessing the loaded configuration
+   * @return a {@link Configuration} for accessing the loaded configuration
    * @throws NullPointerException if {@code location} is {@code null}
    */
   @Override
-  public ConfigReader load(ConfigResourceLocation location) {
-    requireNonNull(location, "ConfigResourceLocation cannot be null when loading configuration");
-    Map<String, Object> cachedConfig = cache.getOrCompute("ALL_CONFIG", () -> getConfig(location));
+  public Configuration load(ConfigResourceLocation location) {
+    Set<String> baseDirectories = location.getBaseDirectories().toSet();
+    var resource = new ClasspathResource(baseDirectories);
+    StrategyRegistry<String, ConfigProvider> providersRegistry = providers.create(resource);
+    StrategyRegistry<String, ConfigLoader> loadersRegistry = loaders.create();
 
-    return new DefaultConfigReader(new MapConfiguration(cachedConfig));
+    var provider = ConfigResourceProvider.of(providersRegistry);
+    var loader = ConfigResourceLoader.of(loadersRegistry);
+    var resourceExtensionResolver = new ResourceExtensionResolver(loadersRegistry.getAllKeys(),
+        resource);
+    var resourceNameValidator = new ResourceNameValidator(baseDirectories);
+    var preparer = new ConfigResourcePreparer(location, resourceExtensionResolver,
+        resourceNameValidator);
+    var processor = new ConfigResourceProcessor(provider, loader, preparer);
+
+    Map<String, Object> cachedConfig = cache.getOrCompute("ALL_CONFIG",
+        () -> getConfig(processor, location));
+    return new MapConfiguration(cachedConfig);
   }
 
   /**
@@ -84,8 +118,9 @@ class DefaultConfigManager implements ConfigManager {
    * @param location the configuration resource location
    * @return a merged and interpolated map of configuration values
    */
-  private Map<String, Object> getConfig(ConfigResourceLocation location) {
-    List<Map<String, Object>> configs = resourceProcessor.load(location);
+  private Map<String, Object> getConfig(ConfigResourceProcessor processor,
+      ConfigResourceLocation location) {
+    List<Map<String, Object>> configs = processor.load(location);
     Map<String, Object> merged = merger.merge(configs);
     return interpolator.interpolate(
         merged,

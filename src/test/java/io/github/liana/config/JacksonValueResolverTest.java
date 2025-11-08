@@ -296,7 +296,8 @@ class JacksonValueResolverTest {
     @Test
     @DisplayName("should throw NullPointerException when sources is null")
     void shouldThrowWhenSourcesIsNull() {
-      assertThrows(NullPointerException.class, () -> new JacksonValueResolver(objectMapper, null));
+      Map<String, Object> source = null;
+      assertThrows(NullPointerException.class, () -> new JacksonValueResolver(objectMapper, source));
     }
 
     @Nested

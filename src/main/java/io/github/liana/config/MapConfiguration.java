@@ -1,6 +1,7 @@
 package io.github.liana.config;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Immutable configuration backed by a nested {@link Map}.
