@@ -25,6 +25,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Responsible for preparing a list of configuration resources based on a given
@@ -39,9 +41,9 @@ import java.util.Optional;
  */
 class ConfigResourcePreparer {
 
+  private static final Pattern PROVIDER_PATTERN = Pattern.compile("^(\\w+):(.+)$");
   private final ConfigResourceLocation location;
   private final String profile;
-  private final ResourceExtensionResolver resourceExtensionResolver;
   private final ResourceNameValidator resourceNameValidator;
 
   /**
@@ -49,18 +51,15 @@ class ConfigResourcePreparer {
    * from the environment variable {@code PROFILE_ENV_VAR}.
    *
    * <p>This constructor is a convenience shortcut that automatically reads the profile from the
-   * current environment and uses the provided {@link ResourceExtensionResolver} and
    * {@link ResourceNameValidator} to locate and validate resources.
    *
-   * @param location                  the config resource location to resolve
-   * @param resourceExtensionResolver the resolver responsible for locating configuration resources
-   * @param resourceNameValidator     the validator used to verify that resource names and
-   *                                  extensions are safe
+   * @param location              the config resource location to resolve
+   * @param resourceNameValidator the validator used to verify that resource names and extensions
+   *                              are safe
    */
   public ConfigResourcePreparer(ConfigResourceLocation location,
-      ResourceExtensionResolver resourceExtensionResolver,
       ResourceNameValidator resourceNameValidator) {
-    this(location, PropertySources.fromEnv().get(PROFILE_ENV_VAR), resourceExtensionResolver,
+    this(location, PropertySources.fromEnv().get(PROFILE_ENV_VAR),
         resourceNameValidator);
   }
 
@@ -71,19 +70,15 @@ class ConfigResourcePreparer {
    * <p>This constructor provides full control over how configuration resources are resolved and
    * validated.
    *
-   * @param location                  the config resource location to resolve
-   * @param profile                   the profile name to use for resolving default resources
-   * @param resourceExtensionResolver the resolver responsible for locating configuration resources
-   * @param resourceNameValidator     the validator used to verify that resource names and
-   *                                  extensions are safe
+   * @param location              the config resource location to resolve
+   * @param profile               the profile name to use for resolving default resources
+   * @param resourceNameValidator the validator used to verify that resource names and extensions
+   *                              are safe
    */
   public ConfigResourcePreparer(ConfigResourceLocation location, String profile,
-      ResourceExtensionResolver resourceExtensionResolver,
       ResourceNameValidator resourceNameValidator) {
     this.location = requireNonNull(location, "configResourceLocation must not be null");
     this.profile = defaultIfBlank(profile, DEFAULT_PROFILE);
-    this.resourceExtensionResolver = requireNonNull(resourceExtensionResolver,
-        "resourceExtensionResolver must not be null");
     this.resourceNameValidator = requireNonNull(resourceNameValidator,
         "resourceNameValidator must not be null");
   }
@@ -101,8 +96,18 @@ class ConfigResourcePreparer {
     final List<String> resourceNames = prepareResourceNames(isDefaultProvider, variables);
 
     return resourceNames.stream()
-        .map(resourceName -> new ConfigResourceReference(provider, resourceName))
+        .map(resourceName -> getConfigResourceReference(provider, resourceName))
         .toList();
+  }
+
+  private ConfigResourceReference getConfigResourceReference(String globalProvider,
+      String rawName) {
+    Matcher matcher = PROVIDER_PATTERN.matcher(rawName);
+    if (matcher.matches()) {
+      return new ConfigResourceReference(matcher.group(1), matcher.group(2));
+    }
+
+    return new ConfigResourceReference(globalProvider, rawName);
   }
 
   /**
@@ -159,13 +164,8 @@ class ConfigResourcePreparer {
   private List<String> resolveDefaultResources(Placeholder placeholder,
       Map<String, String> variableMap) {
     List<String> processedNames = new ArrayList<>();
-    resourceExtensionResolver.findConfigResource(BASE_RESOURCE_NAME)
-        .filter(resourceNameValidator::isSafeResourceName)
-        .ifPresent(processedNames::add);
-
+    processedNames.add(BASE_RESOURCE_NAME);
     placeholder.replaceIfAllResolvable(BASE_RESOURCE_NAME_PATTERN, variableMap)
-        .flatMap(resourceExtensionResolver::findConfigResource)
-        .filter(resourceNameValidator::isSafeResourceName)
         .ifPresent(processedNames::add);
 
     return Collections.unmodifiableList(processedNames);
@@ -190,7 +190,6 @@ class ConfigResourcePreparer {
     return resourceNames.toSet().stream()
         .map(template -> placeholder.replaceIfAllResolvable(template, variableMap))
         .flatMap(Optional::stream)
-        .filter(resourceExtensionResolver::isExtensionAllowed)
         .filter(resourceNameValidator::isSafeResourceName)
         .toList();
   }

@@ -94,16 +94,14 @@ class DefaultConfigManager implements ConfigManager {
   @Override
   public Configuration load(ConfigResourceLocation location) {
     Set<String> baseDirectories = location.getBaseDirectories().toSet();
-    var resource = new ClasspathResource(baseDirectories);
-    StrategyRegistry<String, ConfigProvider> providersRegistry = providers.create(resource);
-    StrategyRegistry<String, ConfigLoader> loadersRegistry = loaders.create();
 
-    var provider = ConfigResourceProvider.of(providersRegistry);
-    var loader = ConfigResourceLoader.of(loadersRegistry);
-    var resourceExtensionResolver = new ResourceExtensionResolver(loadersRegistry.getAllKeys(),
-        resource);
+    StrategyRegistry<String, ConfigProvider> providersRegistry = providers.create(baseDirectories);
+    StrategyRegistry<String, ConfigLoader> loadersRegistry = loaders.create();
+    var provider = new ConfigProviderResolver(providersRegistry);
+    var loader = new ConfigLoaderResolver(loadersRegistry);
+
     var resourceNameValidator = new ResourceNameValidator(baseDirectories);
-    var preparer = new ConfigResourcePreparer(location, resourceExtensionResolver,
+    var preparer = new ConfigResourcePreparer(location,
         resourceNameValidator);
     var processor = new ConfigResourceProcessor(provider, loader, preparer);
 

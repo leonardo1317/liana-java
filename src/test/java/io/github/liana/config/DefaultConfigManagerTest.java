@@ -3,6 +3,7 @@ package io.github.liana.config;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
@@ -13,7 +14,6 @@ import static org.mockito.Mockito.when;
 
 import io.github.liana.internal.ImmutableConfigMap;
 import io.github.liana.internal.ImmutableConfigSet;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -118,7 +118,7 @@ class DefaultConfigManagerTest {
     ConfigLoader configLoader = mock(ConfigLoader.class);
     List<ConfigLoader> loaders = List.of(configLoader);
     var loaderRegistry = new StrategyRegistry<>(keyNormalizer, loaders);
-    when(providersRegistry.create(any(ClasspathResource.class))).thenReturn(providerRegistry);
+    when(providersRegistry.create(anyCollection())).thenReturn(providerRegistry);
     when(loadersRegistry.create()).thenReturn(loaderRegistry);
     when(cache.getOrCompute(eq("ALL_CONFIG"), any())).thenReturn(cachedMap);
     when(location.getBaseDirectories()).thenReturn(ImmutableConfigSet.of(Set.of("config")));
@@ -150,7 +150,7 @@ class DefaultConfigManagerTest {
     ConfigLoader configLoader = mock(ConfigLoader.class);
     List<ConfigLoader> loaders = List.of(configLoader);
     var loaderRegistry = new StrategyRegistry<>(keyNormalizer, loaders);
-    when(providersRegistry.create(any(ClasspathResource.class))).thenReturn(providerRegistry);
+    when(providersRegistry.create(anyCollection())).thenReturn(providerRegistry);
     when(loadersRegistry.create()).thenReturn(loaderRegistry);
 
     when(cache.getOrCompute(eq("ALL_CONFIG"), any())).thenAnswer(invocation -> {
@@ -180,7 +180,7 @@ class DefaultConfigManagerTest {
     List<ConfigLoader> loaders = List.of(configLoader);
     var loaderRegistry = new StrategyRegistry<>(keyNormalizer, loaders);
 
-    when(providersRegistry.create(any(ClasspathResource.class))).thenReturn(providerRegistry);
+    when(providersRegistry.create(anyList())).thenReturn(providerRegistry);
     when(loadersRegistry.create()).thenReturn(loaderRegistry);
     when(cache.getOrCompute(eq("ALL_CONFIG"), any())).thenThrow(new RuntimeException("cache fail"));
     when(location.getBaseDirectories()).thenReturn(ImmutableConfigSet.of(Set.of("config")));

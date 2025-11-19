@@ -25,15 +25,15 @@ class ProvidersRegistryTest {
   @Test
   @DisplayName("should create registry containing default and custom providers")
   void shouldCreateRegistryContainingDefaultAndCustomProviders() {
+    List<String> directories = List.of("", "config");
     List<String> expected = List.of("classpath", "filesystem");
     ConfigProvider customProvider = mock(ConfigProvider.class);
-    ClasspathResource resource = mock(ClasspathResource.class);
 
     when(customProvider.getKeys()).thenReturn(Set.of("filesystem"));
 
     ProvidersRegistry providersRegistry = new ProvidersRegistry(List.of(customProvider));
 
-    StrategyRegistry<String, ConfigProvider> registry = providersRegistry.create(resource);
+    StrategyRegistry<String, ConfigProvider> registry = providersRegistry.create(directories);
 
     assertNotNull(registry);
     assertEquals(2, registry.getAllKeys().size());
@@ -43,11 +43,10 @@ class ProvidersRegistryTest {
   @Test
   @DisplayName("should return registry with only default provider when no custom providers are given")
   void shouldReturnRegistryWithOnlyDefaultProviderWhenNoCustomProvidersGiven() {
-    ClasspathResource resource = mock(ClasspathResource.class);
-
+    List<String> directories = List.of("", "config");
     ProvidersRegistry providersRegistry = new ProvidersRegistry(Collections.emptyList());
 
-    StrategyRegistry<String, ConfigProvider> registry = providersRegistry.create(resource);
+    StrategyRegistry<String, ConfigProvider> registry = providersRegistry.create(directories);
 
     assertNotNull(registry);
     assertEquals(1, registry.getAllKeys().size());

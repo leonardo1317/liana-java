@@ -20,9 +20,9 @@ import java.util.Optional;
  * collaborators:
  *
  * <ul>
- *   <li>{@link ConfigResourceProvider} – resolves resource references into concrete
+ *   <li>{@link ConfigProviderResolver} – resolves resource references into concrete
  *       {@link ConfigResource} instances.</li>
- *   <li>{@link ConfigResourceLoader} – loads the resolved resources and parses them into
+ *   <li>{@link ConfigLoaderResolver} – loads the resolved resources and parses them into
  *       {@link Configuration} objects.</li>
  * </ul>
  *
@@ -36,37 +36,38 @@ import java.util.Optional;
  * <p>Example usage:
  *
  * <pre>{@code
- * ConfigResourceProvider provider = ConfigResourceProvider.of(registry);
- * ConfigResourceLoader loader = ConfigResourceLoader.of(loaderRegistry);
+ * ConfigProviderResolver provider = ConfigProviderResolver.of(registry);
+ * ConfigLoaderResolver loader = ConfigLoaderResolver.of(loaderRegistry);
  * ConfigResourceProcessor processor = new ConfigResourceProcessor(provider, loader);
  *
  * ConfigResourceLocation location = ConfigResourceLocation.of("classpath:app.yaml");
  * List<Map<String, Object>> configs = processor.load(location);
  * }</pre>
  *
- * <p>This class is thread-safe if both {@link ConfigResourceProvider} and
- * {@link ConfigResourceLoader} are thread-safe.
+ * <p>This class is thread-safe if both {@link ConfigProviderResolver} and
+ * {@link ConfigLoaderResolver} are thread-safe.
  */
 class ConfigResourceProcessor {
 
   private static final long NANOS_PER_MILLISECOND = 1_000_000L;
-  private final ConfigResourceProvider provider;
-  private final ConfigResourceLoader loader;
+  private final ConfigProviderResolver providerResolver;
+  private final ConfigLoaderResolver loaderResolver;
   private final ConfigResourcePreparer configResourcePreparer;
 
   /**
    * Creates a new {@code ConfigResourceProcessor} instance.
    *
-   * @param provider the resource provider used to resolve configuration references, must not be
-   *                 {@code null}
-   * @param loader   the loader responsible for reading and parsing resolved resources, must not be
-   *                 {@code null}
+   * @param providerResolver the resource provider used to resolve configuration references, must
+   *                         not be {@code null}
+   * @param loaderResolver   the loader responsible for reading and parsing resolved resources, must
+   *                         not be {@code null}
    * @throws NullPointerException if {@code provider} or {@code loader} is {@code null}
    */
-  public ConfigResourceProcessor(ConfigResourceProvider provider, ConfigResourceLoader loader,
+  public ConfigResourceProcessor(ConfigProviderResolver providerResolver,
+      ConfigLoaderResolver loaderResolver,
       ConfigResourcePreparer configResourcePreparer) {
-    this.provider = requireNonNull(provider);
-    this.loader = requireNonNull(loader);
+    this.providerResolver = requireNonNull(providerResolver);
+    this.loaderResolver = requireNonNull(loaderResolver);
     this.configResourcePreparer = requireNonNull(configResourcePreparer);
   }
 
@@ -122,8 +123,12 @@ class ConfigResourceProcessor {
 
     try {
       long startTime = System.nanoTime();
-      ConfigResource resource = provider.resolve(reference);
-      Configuration configuration = loader.loadFromResource(resource);
+
+      ConfigProvider configProvider = providerResolver.resolve(reference.provider());
+      ConfigResource resource = configProvider.resolveResource(reference);
+
+      ConfigLoader configLoader = loaderResolver.resolve(resource.resourceName());
+      Configuration configuration = configLoader.load(resource);
       Map<String, Object> config = configuration.getRootAsMap();
 
       long durationMs = (System.nanoTime() - startTime) / NANOS_PER_MILLISECOND;

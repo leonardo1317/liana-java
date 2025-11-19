@@ -1,5 +1,6 @@
 package io.github.liana.config;
 
+import static io.github.liana.internal.StringUtils.requireNonBlank;
 import static java.util.Objects.requireNonNull;
 
 import io.github.liana.config.exception.ConfigProviderException;
@@ -30,6 +31,6 @@ public interface ConfigProvider extends Strategy<String> {
    */
   default void validateResource(ConfigResourceReference resource) {
     requireNonNull(resource, "ConfigResourceReference must not be null");
-    requireNonNull(resource.resourceName(), "ResourceNames must not be null");
+    requireNonBlank(resource.resourceName(), "ResourceNames must not be null");
   }
 }

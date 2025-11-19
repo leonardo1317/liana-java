@@ -2,6 +2,7 @@ package io.github.liana.config;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
@@ -16,8 +17,8 @@ final class ProvidersRegistry {
         requireNonNull(customProviders, "customProviders must not be null"));
   }
 
-  public StrategyRegistry<String, ConfigProvider> create(ClasspathResource resource) {
-    List<ConfigProvider> defaults = List.of(new ClasspathProvider(resource));
+  public StrategyRegistry<String, ConfigProvider> create(Collection<String> baseDirectories) {
+    List<ConfigProvider> defaults = List.of(new ClasspathProvider(baseDirectories));
 
     List<ConfigProvider> merged = Stream.concat(defaults.stream(), customProviders.stream())
         .toList();

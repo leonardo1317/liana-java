@@ -9,7 +9,6 @@ import static org.mockito.Mockito.when;
 
 import io.github.liana.internal.ImmutableConfigMap;
 import io.github.liana.internal.ImmutableConfigSet;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,14 +35,11 @@ class ConfigResourcePreparerTest {
   @Mock
   private ResourceNameValidator resourceNameValidator;
 
-  @Mock
-  private ResourceExtensionResolver resourceExtensionResolver;
-
   private ConfigResourcePreparer preparer;
 
   @BeforeEach
   void setUp() {
-    preparer = new ConfigResourcePreparer(configResourceLocation, null, resourceExtensionResolver,
+    preparer = new ConfigResourcePreparer(configResourceLocation, null,
         resourceNameValidator
     );
   }
@@ -56,7 +52,7 @@ class ConfigResourcePreparerTest {
     @DisplayName("should throw when ConfigResourceLocation is null")
     void shouldThrowWhenConfigResourceLocationIsNull() {
       assertThrows(NullPointerException.class,
-          () -> new ConfigResourcePreparer(null, null, resourceExtensionResolver,
+          () -> new ConfigResourcePreparer(null, null,
               resourceNameValidator)
       );
     }
@@ -65,18 +61,12 @@ class ConfigResourcePreparerTest {
     @DisplayName("should use profile from environment variable when not provided explicitly")
     void shouldUseProfileFromEnvironmentWhenNotProvidedExplicitly() {
       final String PROFILE = "default";
-      final String RESOURCE_NAME = "application.properties";
-      final String RESOURCE_NAME_PATTERN = "application-default.properties";
+      final String RESOURCE_NAME = "application";
+      final String RESOURCE_NAME_PATTERN = "application-default";
 
       ConfigResourcePreparer preparer = new ConfigResourcePreparer(configResourceLocation,
-          resourceExtensionResolver, resourceNameValidator
+          resourceNameValidator
       );
-
-      when(resourceExtensionResolver.findConfigResource(eq("application"))).thenReturn(
-          Optional.of(RESOURCE_NAME));
-      when(resourceExtensionResolver.findConfigResource(eq("application-default"))).thenReturn(
-          Optional.of(RESOURCE_NAME_PATTERN));
-      when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
 
       List<ConfigResourceReference> result = preparer.prepare();
 
@@ -93,18 +83,12 @@ class ConfigResourcePreparerTest {
     @DisplayName("should use default profile when profile is null")
     void shouldUseDefaultProfileWhenProfileIsNull() {
       final String PROFILE = "default";
-      final String RESOURCE_NAME = "application.properties";
-      final String RESOURCE_NAME_PATTERN = "application-default.properties";
+      final String RESOURCE_NAME = "application";
+      final String RESOURCE_NAME_PATTERN = "application-default";
 
       ConfigResourcePreparer preparer = new ConfigResourcePreparer(configResourceLocation, null,
-          resourceExtensionResolver, resourceNameValidator
+          resourceNameValidator
       );
-
-      when(resourceExtensionResolver.findConfigResource(eq("application"))).thenReturn(
-          Optional.of(RESOURCE_NAME));
-      when(resourceExtensionResolver.findConfigResource(eq("application-default"))).thenReturn(
-          Optional.of(RESOURCE_NAME_PATTERN));
-      when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
 
       List<ConfigResourceReference> result = preparer.prepare();
 
@@ -121,17 +105,11 @@ class ConfigResourcePreparerTest {
     @DisplayName("should use default profile when profile is empty")
     void shouldUseDefaultProfileWhenProfileIsEmpty() {
       final String PROFILE = "default";
-      final String RESOURCE_NAME = "application.properties";
-      final String RESOURCE_NAME_PATTERN = "application-default.properties";
+      final String RESOURCE_NAME = "application";
+      final String RESOURCE_NAME_PATTERN = "application-default";
 
       ConfigResourcePreparer preparer = new ConfigResourcePreparer(configResourceLocation, "",
-          resourceExtensionResolver, resourceNameValidator);
-
-      when(resourceExtensionResolver.findConfigResource(eq("application"))).thenReturn(
-          Optional.of(RESOURCE_NAME));
-      when(resourceExtensionResolver.findConfigResource(eq("application-default"))).thenReturn(
-          Optional.of(RESOURCE_NAME_PATTERN));
-      when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
+          resourceNameValidator);
 
       List<ConfigResourceReference> result = preparer.prepare();
 
@@ -148,17 +126,11 @@ class ConfigResourcePreparerTest {
     @DisplayName("should assign profile correctly when profile is provided")
     void shouldAssignProfileCorrectlyWhenProfileIsProvided() {
       final String PROFILE = "dev";
-      final String RESOURCE_NAME = "application.properties";
-      final String RESOURCE_NAME_PATTERN = "application-" + PROFILE + ".properties";
+      final String RESOURCE_NAME = "application";
+      final String RESOURCE_NAME_PATTERN = "application-" + PROFILE;
 
       ConfigResourcePreparer preparer = new ConfigResourcePreparer(configResourceLocation, PROFILE,
-          resourceExtensionResolver, resourceNameValidator);
-
-      when(resourceExtensionResolver.findConfigResource(eq("application"))).thenReturn(
-          Optional.of(RESOURCE_NAME));
-      when(resourceExtensionResolver.findConfigResource(eq("application-dev"))).thenReturn(
-          Optional.of(RESOURCE_NAME_PATTERN));
-      when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
+          resourceNameValidator);
 
       List<ConfigResourceReference> result = preparer.prepare();
 
@@ -172,19 +144,10 @@ class ConfigResourcePreparerTest {
     }
 
     @Test
-    @DisplayName("should throw when resourceExtensionResolver is null")
-    void shouldThrowWhenResourceLocatorIsNull() {
-      assertThrows(NullPointerException.class,
-          () -> new ConfigResourcePreparer(configResourceLocation, null,
-              null, resourceNameValidator)
-      );
-    }
-
-    @Test
     @DisplayName("should throw when ResourceNameValidator is null")
     void shouldThrowWhenFilenameValidatorIsNull() {
       assertThrows(NullPointerException.class,
-          () -> new ConfigResourcePreparer(configResourceLocation, null, resourceExtensionResolver,
+          () -> new ConfigResourcePreparer(configResourceLocation, null,
               null));
     }
   }
@@ -198,14 +161,7 @@ class ConfigResourcePreparerTest {
     @DisplayName("should use default 'classpath' when provider is null or empty")
     void shouldUseDefaultProviderWhenProviderIsNullOrEmpty(String invalidProvider) {
       final String DEFAULT_PROVIDER = "classpath";
-      final String RESOURCE_NAME = "application.properties";
-      final String RESOURCE_NAME_PATTERN = "application-default.properties";
       when(configResourceLocation.getProvider()).thenReturn(invalidProvider);
-      when(resourceExtensionResolver.findConfigResource(eq("application"))).thenReturn(
-          Optional.of(RESOURCE_NAME));
-      when(resourceExtensionResolver.findConfigResource(eq("application-default"))).thenReturn(
-          Optional.of(RESOURCE_NAME_PATTERN));
-      when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
 
       List<ConfigResourceReference> result = preparer.prepare();
 
@@ -218,14 +174,7 @@ class ConfigResourcePreparerTest {
     @DisplayName("should use default 'classpath' when provider contains only whitespace")
     void shouldUseDefaultProviderWhenProviderIsBlank(String provider) {
       final String DEFAULT_PROVIDER = "classpath";
-      final String RESOURCE_NAME = "application.properties";
-      final String RESOURCE_NAME_PATTERN = "application-default.properties";
       when(configResourceLocation.getProvider()).thenReturn(provider);
-      when(resourceExtensionResolver.findConfigResource(eq("application"))).thenReturn(
-          Optional.of(RESOURCE_NAME));
-      when(resourceExtensionResolver.findConfigResource(eq("application-default"))).thenReturn(
-          Optional.of(RESOURCE_NAME_PATTERN));
-      when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
 
       List<ConfigResourceReference> result = preparer.prepare();
 
@@ -237,11 +186,10 @@ class ConfigResourcePreparerTest {
     @ValueSource(strings = {"git", "classpath", "github"})
     @DisplayName("should use provided provider when not blank")
     void shouldUseProvidedProviderWhenNotBlank(String provider) {
-      final String RESOURCE_NAME = "application.properties";
+      final String RESOURCE_NAME = "config/application.properties";
       when(configResourceLocation.getProvider()).thenReturn(provider);
       when(configResourceLocation.getResourceNames()).thenReturn(
           ImmutableConfigSet.of(Set.of(RESOURCE_NAME)));
-      when(resourceExtensionResolver.isExtensionAllowed(anyString())).thenReturn(true);
       when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
 
       List<ConfigResourceReference> result = preparer.prepare();
@@ -259,19 +207,13 @@ class ConfigResourcePreparerTest {
     @NullSource
     @DisplayName("should use default resource names when provided name is null")
     void shouldUseDefaultResourceNamesWhenProvidedNameIsNull(String resourceName) {
-      final String EXTENSION = "properties";
       final String PROFILE = "default";
-      final String RESOURCE_NAME = "application." + EXTENSION;
-      final String RESOURCE_NAME_PATTERN = "application-" + PROFILE + "." + EXTENSION;
+      final String RESOURCE_NAME = "application";
+      final String RESOURCE_NAME_PATTERN = "application-" + PROFILE;
       var resourceNames = new HashSet<String>();
       resourceNames.add(resourceName);
       when(configResourceLocation.getResourceNames()).thenReturn(
           ImmutableConfigSet.of(resourceNames));
-      when(resourceExtensionResolver.findConfigResource(eq("application"))).thenReturn(
-          Optional.of(RESOURCE_NAME));
-      when(resourceExtensionResolver.findConfigResource(eq("application-default"))).thenReturn(
-          Optional.of(RESOURCE_NAME_PATTERN));
-      when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
 
       List<ConfigResourceReference> result = preparer.prepare();
 
@@ -285,19 +227,13 @@ class ConfigResourcePreparerTest {
     @ValueSource(strings = {"", "   ", "\t", "\n"})
     @DisplayName("should use default resource names when provided name is blank")
     void shouldUseDefaultResourceNamesWhenProvidedNameIsBlank(String resourceName) {
-      final String EXTENSION = "properties";
       final String PROFILE = "default";
-      final String RESOURCE_NAME = "application." + EXTENSION;
-      final String RESOURCE_NAME_PATTERN = "application-" + PROFILE + "." + EXTENSION;
+      final String RESOURCE_NAME = "application";
+      final String RESOURCE_NAME_PATTERN = "application-" + PROFILE;
       var resourceNames = new HashSet<String>();
       resourceNames.add(resourceName);
       when(configResourceLocation.getResourceNames()).thenReturn(
           ImmutableConfigSet.of(resourceNames));
-      when(resourceExtensionResolver.findConfigResource(eq("application"))).thenReturn(
-          Optional.of(RESOURCE_NAME));
-      when(resourceExtensionResolver.findConfigResource(eq("application-default"))).thenReturn(
-          Optional.of(RESOURCE_NAME_PATTERN));
-      when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
 
       List<ConfigResourceReference> result = preparer.prepare();
 
@@ -305,25 +241,6 @@ class ConfigResourcePreparerTest {
           .anyMatch(resource -> RESOURCE_NAME.equals(resource.resourceName())));
       assertTrue(result.stream()
           .anyMatch(resource -> RESOURCE_NAME_PATTERN.equals(resource.resourceName())));
-    }
-
-    @ParameterizedTest
-    @NullAndEmptySource
-    @DisplayName("should return an empty list when default resource name resolution fails")
-    void shouldReturnAnEmptyListWhenDefaultResourceNameResolutionFails(String resourceName) {
-      var resourceNames = new HashSet<String>();
-      resourceNames.add(resourceName);
-      when(configResourceLocation.getResourceNames()).thenReturn(
-          ImmutableConfigSet.of(resourceNames));
-
-      when(resourceExtensionResolver.findConfigResource(eq("application"))).thenReturn(
-          Optional.empty());
-      when(resourceExtensionResolver.findConfigResource(eq("application-default"))).thenReturn(
-          Optional.empty());
-
-      List<ConfigResourceReference> result = preparer.prepare();
-
-      assertTrue(result.isEmpty());
     }
 
     @Test
@@ -339,7 +256,6 @@ class ConfigResourcePreparerTest {
       resourceNames.add("application-${profile}.properties");
       when(configResourceLocation.getResourceNames()).thenReturn(
           ImmutableConfigSet.of(resourceNames));
-      when(resourceExtensionResolver.isExtensionAllowed(anyString())).thenReturn(true);
       when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
 
       List<ConfigResourceReference> result = preparer.prepare();
@@ -353,7 +269,7 @@ class ConfigResourcePreparerTest {
     @Test
     @DisplayName("should only include valid resource names")
     void shouldOnlyIncludeValidResourceNames() {
-      final String VALID_RESOURCE_NAME = "application.properties";
+      final String VALID_RESOURCE_NAME = "config/application.properties";
       final String INVALID_RESOURCE_NAME = " ../invalid.json";
       var resourceNames = new LinkedHashSet<String>();
       resourceNames.add(VALID_RESOURCE_NAME);
@@ -362,8 +278,6 @@ class ConfigResourcePreparerTest {
       when(configResourceLocation.getProvider()).thenReturn("classpath");
       when(configResourceLocation.getResourceNames()).thenReturn(
           ImmutableConfigSet.of(resourceNames));
-
-      when(resourceExtensionResolver.isExtensionAllowed(anyString())).thenReturn(true);
       when(resourceNameValidator.isSafeResourceName(eq(VALID_RESOURCE_NAME))).thenReturn(true);
       when(resourceNameValidator.isSafeResourceName(eq(INVALID_RESOURCE_NAME))).thenReturn(false);
 
@@ -453,7 +367,6 @@ class ConfigResourcePreparerTest {
           ImmutableConfigSet.of(resourceNames));
       when(configResourceLocation.getVariables()).thenReturn(null);
       when(configResourceLocation.getPlaceholder()).thenReturn(Placeholders.builder().build());
-      when(resourceExtensionResolver.isExtensionAllowed(anyString())).thenReturn(true);
       when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
 
       List<ConfigResourceReference> result = preparer.prepare();
@@ -474,7 +387,6 @@ class ConfigResourcePreparerTest {
           ImmutableConfigSet.of(resourceNames));
       when(configResourceLocation.getVariables()).thenReturn(ImmutableConfigMap.empty());
       when(configResourceLocation.getPlaceholder()).thenReturn(Placeholders.builder().build());
-      when(resourceExtensionResolver.isExtensionAllowed(anyString())).thenReturn(true);
       when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
 
       List<ConfigResourceReference> result = preparer.prepare();
@@ -497,7 +409,6 @@ class ConfigResourcePreparerTest {
       when(configResourceLocation.getVariables()).thenReturn(
           ImmutableConfigMap.of(Map.of("profile", PROFILE)));
       when(configResourceLocation.getPlaceholder()).thenReturn(Placeholders.builder().build());
-      when(resourceExtensionResolver.isExtensionAllowed(anyString())).thenReturn(true);
       when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
 
       List<ConfigResourceReference> result = preparer.prepare();
@@ -535,7 +446,6 @@ class ConfigResourcePreparerTest {
       when(configResourceLocation.getVariables()).thenReturn(
           ImmutableConfigMap.of(Map.of("profile", PROFILE)));
       when(configResourceLocation.getPlaceholder()).thenReturn(Placeholders.builder().build());
-      when(resourceExtensionResolver.isExtensionAllowed(anyString())).thenReturn(true);
       when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
 
       List<ConfigResourceReference> result = preparer.prepare();
@@ -543,5 +453,48 @@ class ConfigResourcePreparerTest {
       assertTrue(result.stream()
           .anyMatch(resource -> RESOURCE_NAME_PATTERN.equals(resource.resourceName())));
     }
+  }
+
+  @Test
+  @DisplayName("should extract provider and name when resourceName contains provider prefix")
+  void shouldExtractProviderFromEmbeddedResourceName() {
+    var provider = "file";
+    final String RESOURCE_NAME = "application.properties";
+    var resourceNames = new LinkedHashSet<String>();
+    resourceNames.add("file:application.properties");
+    when(configResourceLocation.getResourceNames()).thenReturn(ImmutableConfigSet.of(resourceNames));
+    when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
+
+    List<ConfigResourceReference> result = preparer.prepare();
+
+    assertTrue(result.stream()
+        .anyMatch(resource -> RESOURCE_NAME.equals(resource.resourceName())));
+    assertTrue(result.stream()
+        .anyMatch(resource -> provider.equals(resource.provider())));
+  }
+
+  @Test
+  @DisplayName("should use global provider when resourceName has no provider, and override when it has")
+  void shouldUseGlobalProviderWhenNoEmbeddedAndOverrideWhenEmbedded() {
+    final String GLOBAL_PROVIDER = "classpath";
+    final String EMBEDDED_PROVIDER = "file";
+
+    var resourceNames = new LinkedHashSet<String>();
+    resourceNames.add("file:application.properties");
+    resourceNames.add("config/application.yaml");
+
+    when(configResourceLocation.getProvider()).thenReturn(GLOBAL_PROVIDER);
+    when(configResourceLocation.getResourceNames()).thenReturn(ImmutableConfigSet.of(resourceNames));
+    when(resourceNameValidator.isSafeResourceName(anyString())).thenReturn(true);
+
+    List<ConfigResourceReference> result = preparer.prepare();
+
+    assertTrue(result.stream()
+        .anyMatch(resource -> "application.properties".equals(resource.resourceName()) &&
+            EMBEDDED_PROVIDER.equals(resource.provider())));
+
+    assertTrue(result.stream()
+        .anyMatch(resource -> "config/application.yaml".equals(resource.resourceName()) &&
+            GLOBAL_PROVIDER.equals(resource.provider())));
   }
 }
