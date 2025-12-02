@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.github.liana.config.spi.ConfigProvider;
+import io.github.liana.config.spi.ResourceProvider;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -28,13 +28,13 @@ class ProvidersRegistryTest {
   void shouldCreateRegistryContainingDefaultAndCustomProviders() {
     List<String> directories = List.of("", "config");
     List<String> expected = List.of("classpath", "filesystem");
-    ConfigProvider customProvider = mock(ConfigProvider.class);
+    ResourceProvider customProvider = mock(ResourceProvider.class);
 
     when(customProvider.getKeys()).thenReturn(Set.of("filesystem"));
 
     ProvidersRegistry providersRegistry = new ProvidersRegistry(List.of(customProvider));
 
-    StrategyRegistry<String, ConfigProvider> registry = providersRegistry.create(directories);
+    StrategyRegistry<String, ResourceProvider> registry = providersRegistry.create(directories);
 
     assertNotNull(registry);
     assertEquals(2, registry.getAllKeys().size());
@@ -47,7 +47,7 @@ class ProvidersRegistryTest {
     List<String> directories = List.of("", "config");
     ProvidersRegistry providersRegistry = new ProvidersRegistry(Collections.emptyList());
 
-    StrategyRegistry<String, ConfigProvider> registry = providersRegistry.create(directories);
+    StrategyRegistry<String, ResourceProvider> registry = providersRegistry.create(directories);
 
     assertNotNull(registry);
     assertEquals(1, registry.getAllKeys().size());

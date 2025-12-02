@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.liana.config.api.Placeholder;
+import io.github.liana.config.internal.ImmutableConfigMap;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +41,7 @@ class JacksonInterpolatorTest {
   @DisplayName("should return unmodifiable empty map when source is empty")
   void shouldReturnUnmodifiableEmptyMapWhenSourceIsEmpty() {
     Map<String, Object> source = Collections.emptyMap();
-    Map<String, String> vars = Map.of("VAR", "value");
+    var vars = ImmutableConfigMap.of(Map.of("VAR", "value"));
 
     Map<String, Object> result = interpolator.interpolate(source, placeholder, vars);
 
@@ -52,7 +53,7 @@ class JacksonInterpolatorTest {
   @DisplayName("should return unmodifiable map when variables are empty")
   void shouldReturnUnmodifiableMapWhenVariablesAreEmpty() {
     Map<String, Object> source = Map.of("key", "value");
-    Map<String, String> vars = Collections.emptyMap();
+    var vars = ImmutableConfigMap.empty();
 
     Map<String, Object> result = interpolator.interpolate(source, placeholder, vars);
 
@@ -76,7 +77,8 @@ class JacksonInterpolatorTest {
     when(placeholder.replaceIfAllResolvable("${USER}", vars)).thenReturn(Optional.of("Alice"));
     when(placeholder.replaceIfAllResolvable("${PASS}", vars)).thenReturn(Optional.of("secret"));
 
-    Map<String, Object> result = interpolator.interpolate(source, placeholder, vars);
+    Map<String, Object> result = interpolator.interpolate(source, placeholder,
+        ImmutableConfigMap.of(vars));
 
     assertEquals("Alice", result.get("user"));
     assertEquals("secret", result.get("password"));
@@ -90,7 +92,8 @@ class JacksonInterpolatorTest {
 
     when(placeholder.replaceIfAllResolvable("${UNKNOWN}", vars)).thenReturn(Optional.empty());
 
-    Map<String, Object> result = interpolator.interpolate(source, placeholder, vars);
+    Map<String, Object> result = interpolator.interpolate(source, placeholder,
+        ImmutableConfigMap.of(vars));
 
     assertEquals("${UNKNOWN}", result.get("key"));
   }
@@ -108,7 +111,8 @@ class JacksonInterpolatorTest {
 
     when(placeholder.replaceIfAllResolvable("${VAR}", vars)).thenReturn(Optional.of("value"));
 
-    Map<String, Object> result = interpolator.interpolate(source, placeholder, vars);
+    Map<String, Object> result = interpolator.interpolate(source, placeholder,
+        ImmutableConfigMap.of(vars));
 
     Map<String, Object> level1 = (Map<String, Object>) result.get("level1");
     assertEquals("value", level1.get("level2"));
@@ -125,7 +129,8 @@ class JacksonInterpolatorTest {
     when(placeholder.replaceIfAllResolvable("${A}", vars)).thenReturn(Optional.of("one"));
     when(placeholder.replaceIfAllResolvable("${B}", vars)).thenReturn(Optional.of("two"));
 
-    Map<String, Object> result = interpolator.interpolate(source, placeholder, vars);
+    Map<String, Object> result = interpolator.interpolate(source, placeholder,
+        ImmutableConfigMap.of(vars));
 
     List<Object> list = (List<Object>) result.get("list");
     assertEquals(List.of("one", "two", 123), list);
@@ -146,7 +151,8 @@ class JacksonInterpolatorTest {
     when(placeholder.replaceIfAllResolvable("${USER1}", vars)).thenReturn(Optional.of("Alice"));
     when(placeholder.replaceIfAllResolvable("${USER2}", vars)).thenReturn(Optional.of("Bob"));
 
-    Map<String, Object> result = interpolator.interpolate(source, placeholder, vars);
+    Map<String, Object> result = interpolator.interpolate(source, placeholder,
+        ImmutableConfigMap.of(vars));
     List<Map<String, Object>> users = (List<Map<String, Object>>) result.get("users");
 
     assertEquals("Alice", users.get(0).get("name"));
@@ -157,7 +163,7 @@ class JacksonInterpolatorTest {
   @DisplayName("should throw NullPointerException for null arguments")
   void shouldThrowNullPointerExceptionForNullArguments() {
     Map<String, Object> source = Map.of();
-    Map<String, String> vars = Map.of();
+    var vars = ImmutableConfigMap.empty();
 
     assertThrows(NullPointerException.class,
         () -> interpolator.interpolate(null, placeholder, vars));
@@ -176,7 +182,8 @@ class JacksonInterpolatorTest {
 
     when(placeholder.replaceIfAllResolvable("${VAR}", vars)).thenReturn(Optional.of("value"));
 
-    Map<String, Object> result = interpolator.interpolate(source, placeholder, vars);
+    Map<String, Object> result = interpolator.interpolate(source, placeholder,
+        ImmutableConfigMap.of(vars));
 
     assertEquals("${VAR}", source.get("key"));
     assertEquals("value", result.get("key"));
@@ -190,7 +197,7 @@ class JacksonInterpolatorTest {
     doReturn(null).when(interpolator).executeWithResult(any(), anyString());
 
     Map<String, Object> source = Map.of("key", "value");
-    Map<String, String> vars = Map.of("VAR", "value");
+    var vars = ImmutableConfigMap.of(Map.of("VAR", "value"));
 
     assertThrows(IllegalStateException.class,
         () -> interpolator.interpolate(source, placeholder, vars));
@@ -200,7 +207,7 @@ class JacksonInterpolatorTest {
   @DisplayName("should skip empty string values")
   void shouldSkipEmptyStringValues() {
     Map<String, Object> source = Map.of("key", "");
-    Map<String, String> vars = Map.of("VAR", "value");
+    var vars = ImmutableConfigMap.of(Map.of("VAR", "value"));
 
     Map<String, Object> result = interpolator.interpolate(source, placeholder, vars);
 

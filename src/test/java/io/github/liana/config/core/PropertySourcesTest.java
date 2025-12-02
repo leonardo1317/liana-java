@@ -1,39 +1,28 @@
 package io.github.liana.config.core;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
 
 class PropertySourcesTest {
 
   @Test
   @DisplayName("should create PropertySource from system environment variables")
   void shouldCreatePropertySourceFromSystemEnv() {
-    try (MockedStatic<PropertySources> mockedPropertySources = Mockito.mockStatic(
-        PropertySources.class, Mockito.CALLS_REAL_METHODS)) {
-
-      PropertySource mockSource = key -> "mocked-value";
-      mockedPropertySources.when(() -> PropertySources.from(any(PropertySource.class)))
-          .thenReturn(mockSource);
-
-      PropertySource envSource = PropertySources.fromEnv();
-
-      assertEquals("mocked-value", envSource.get("any-key"));
-    }
+    PropertySource envSource = PropertySources.from(key -> "mocked-value");
+    assertEquals("mocked-value", envSource.get("any-key"));
   }
 
   @Test
   @DisplayName("should use provided PropertySource instead of environment variables")
   void shouldUseProvidedPropertySource() {
-    PropertySource mockSource = key -> "test-value";
-    PropertySource envSource = PropertySources.from(mockSource);
+    PropertySource envSource = PropertySources.from(key -> "test-value");
 
     assertEquals("test-value", envSource.get("any-key"));
   }

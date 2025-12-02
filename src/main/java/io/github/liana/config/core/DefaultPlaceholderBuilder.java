@@ -4,22 +4,18 @@ import io.github.liana.config.api.Placeholder;
 import io.github.liana.config.api.PlaceholderBuilder;
 
 /**
- * A builder for creating {@link DefaultPlaceholder} instances with custom configuration.
+ * Default implementation of {@link PlaceholderBuilder}.
  *
- * <p>By default, the builder creates placeholders with:
- * <ul>
- *   <li>Prefix: {@code "${"}</li>
- *   <li>Suffix: {@code "}"}</li>
- *   <li>Delimiter: {@code ":"}</li>
- *   <li>Escape character: {@code '\\'}</li>
- *   <li>Sources: environment variables via {@link PropertySources#fromEnv()} ()}</li>
- * </ul>
+ * <p>This builder provides a mutable configuration mechanism for assembling
+ * {@link Placeholder} instances with a customizable syntax. It uses conventional defaults such as
+ * the prefix {@code "${"} and suffix {@code "}"}.
  *
- * <p>Additional customization methods allow changing the prefix, suffix, delimiter, escape
- * character, and placeholder sources.
+ * <p>This class is part of the public API. It is mutable and therefore not
+ * thread-safe. A new builder instance should be used for each independent construction sequence.
  *
- * <p>This builder is not thread-safe and should be used in a single-threaded context or with
- * external synchronization.
+ * <p><strong>Limitations:</strong> No validation is performed on the configured
+ * values, which may lead to invalid {@link Placeholder} instances depending on the expectations of
+ * the underlying implementation.
  */
 public final class DefaultPlaceholderBuilder implements PlaceholderBuilder {
 
@@ -28,48 +24,24 @@ public final class DefaultPlaceholderBuilder implements PlaceholderBuilder {
   private String delimiter = ":";
   private char escapeChar = '\\';
 
-  /**
-   * Sets the placeholder prefix.
-   *
-   * @param prefix the prefix string to identify placeholders; must not be null
-   * @return this builder instance
-   */
   @Override
   public PlaceholderBuilder prefix(String prefix) {
     this.prefix = prefix;
     return this;
   }
 
-  /**
-   * Sets the placeholder suffix.
-   *
-   * @param suffix the suffix string to identify placeholders; must not be null
-   * @return this builder instance
-   */
   @Override
   public PlaceholderBuilder suffix(String suffix) {
     this.suffix = suffix;
     return this;
   }
 
-  /**
-   * Sets the delimiter used to separate the placeholder key from its default value.
-   *
-   * @param delimiter the delimiter string; must not be null
-   * @return this builder instance
-   */
   @Override
   public PlaceholderBuilder delimiter(String delimiter) {
     this.delimiter = delimiter;
     return this;
   }
 
-  /**
-   * Sets the escape character used to prevent placeholder resolution.
-   *
-   * @param escapeChar the escape character
-   * @return this builder instance
-   */
   @Override
   public PlaceholderBuilder escapeChar(char escapeChar) {
     this.escapeChar = escapeChar;
@@ -77,9 +49,12 @@ public final class DefaultPlaceholderBuilder implements PlaceholderBuilder {
   }
 
   /**
-   * Builds a new {@link DefaultPlaceholder} instance with the current configuration.
+   * Creates a new {@link Placeholder} instance using the current configuration.
    *
-   * @return a new configured {@link DefaultPlaceholder}
+   * <p>The produced instance is independent of any subsequent modifications
+   * performed on this builder.
+   *
+   * @return a newly created {@code Placeholder}
    */
   @Override
   public Placeholder build() {

@@ -15,7 +15,7 @@ import java.util.Optional;
  * exclusively on the mechanics of value lookup and type conversion, not on storage, caching, or
  * hierarchical behavior.
  *
- * <p>Implementations may retrieve configuration data from diverse sources such as:
+ * <p>Implementations may retrieve configuration data from diverse sources, such as:
  * <ul>
  *   <li>Property files (e.g., {@code .properties}, {@code .yaml}, {@code .json})</li>
  *   <li>Environment variables or system properties</li>
@@ -25,20 +25,11 @@ import java.util.Optional;
  *
  * <p>Resolution behavior:
  * <ul>
- *   <li>Values are accessed by their hierarchical key (e.g. {@code "server.port"})</li>
+ *   <li>Values are accessed by their hierarchical key (e.g., {@code "server.port"})</li>
  *   <li>Conversion is type-safe, supporting primitives, generics, lists, maps, and POJOs</li>
  *   <li>Missing keys return empty results rather than {@code null}</li>
  *   <li>Implementations should avoid throwing exceptions for absent keys</li>
  * </ul>
- *
- * <p>Typical usage is internal to {@link AbstractConfiguration} or a custom
- * {@link Configuration} implementation:
- *
- * <pre>{@code
- * ValueResolver resolver = new JsonValueResolver("config.json");
- * Optional<String> url = resolver.get("server.url", String.class);
- * Optional<MyConfig> cfg = resolver.getRootAs(MyConfig.class);
- * }</pre>
  *
  * @see Configuration
  * @see AbstractConfiguration
@@ -51,19 +42,12 @@ public interface ValueResolver {
    * @param key the configuration key to check
    * @return {@code true} if the key is present and resolvable, {@code false} otherwise
    * @throws NullPointerException if {@code key} is {@code null}
-   * @throws ConversionException if the key cannot be resolved or conversion fails
+   * @throws ConversionException  if the key cannot be resolved or conversion fails
    */
   boolean containsKey(String key);
 
   /**
    * Resolves a configuration value for the given key and converts it to the specified type.
-   *
-   * <p>This method provides flexible type conversion, supporting:
-   * <ul>
-   *   <li>Primitive and wrapper types (e.g. {@code int}, {@code Integer}, {@code String})</li>
-   *   <li>Complex types such as {@code List<T>} and {@code Map<String, T>}</li>
-   *   <li>Custom POJOs or records representing structured data</li>
-   * </ul>
    *
    * @param <T>  the expected result type
    * @param key  the configuration key
@@ -116,22 +100,16 @@ public interface ValueResolver {
    */
   Map<String, Object> getRootAsMap();
 
-
   /**
    * Converts the root configuration node to an object of the specified type.
    *
    * <p>This method allows for flexible deserialization of the entire configuration
-   * into structured data models, such as:
-   * <ul>
-   *   <li>A simple POJO or record ({@code AppConfig.class})</li>
-   *   <li>A parameterized collection ({@code List<ServiceConfig>})</li>
-   *   <li>A nested container ({@code Map<String, List<ClientConfig>>})</li>
-   * </ul>
+   * into structured data models, such as POJOs, parameterized collections, or nested maps.
    *
-   * @param <T>         the target type
-   * @param targetType  the reflective type representing the desired structure
-   * @return an {@link Optional} containing the mapped root object,
-   *         or empty if conversion fails or the source is empty
+   * @param <T>        the target type
+   * @param targetType the reflective type representing the desired structure
+   * @return an {@link Optional} containing the mapped root object, or empty if conversion fails or
+   * the source is empty
    * @throws NullPointerException if {@code targetType} is {@code null}
    * @throws ConversionException  if conversion fails due to invalid or incompatible structure
    */

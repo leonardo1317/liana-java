@@ -3,18 +3,17 @@ package io.github.liana.config.loaders;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.github.liana.config.api.Configuration;
-import io.github.liana.config.core.ConfigParser;
-import io.github.liana.config.core.exception.ConfigLoaderException;
-import io.github.liana.config.spi.ConfigLoader;
-import io.github.liana.config.core.ConfigFileFormat;
-import io.github.liana.config.core.ConfigResource;
+import io.github.liana.config.core.ResourceParser;
+import io.github.liana.config.core.FileFormat;
+import io.github.liana.config.core.exception.ResourceLoaderException;
+import io.github.liana.config.spi.ResourceLoader;
+import io.github.liana.config.core.DefaultResourceStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,20 +29,20 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class PropertiesLoaderTest {
 
   @Mock
-  private ConfigResource resource;
+  private DefaultResourceStream resource;
 
   @Mock
-  private ConfigParser configParser;
+  private ResourceParser resourceParser;
 
-  private ConfigLoader loader;
+  private ResourceLoader loader;
 
   @BeforeEach
   void setUp() {
-    loader = new PropertiesLoader(configParser);
+    loader = new PropertiesLoader(resourceParser);
   }
 
   @Test
-  @DisplayName("should throw NullPointerException when ConfigParser is null")
+  @DisplayName("should throw NullPointerException when ResourceParser is null")
   void shouldThrowExceptionWhenConfigParserIsNull() {
     assertThrows(NullPointerException.class, () -> new YamlLoader(null));
   }
@@ -51,7 +50,7 @@ class PropertiesLoaderTest {
   @Test
   @DisplayName("should return Properties as supported file format")
   void shouldReturnPropertiesAsSupportedFileFormat() {
-    assertEquals(ConfigFileFormat.PROPERTIES.getExtensions(), loader.getKeys());
+    assertEquals(FileFormat.PROPERTIES.getExtensions(), loader.getKeys());
   }
 
   @Test
@@ -61,10 +60,10 @@ class PropertiesLoaderTest {
     InputStream input = new ByteArrayInputStream(content.getBytes());
     Configuration configuration = mock(Configuration.class);
 
-    when(resource.inputStream()).thenReturn(input);
-    when(resource.resourceName()).thenReturn("test.properties");
+    when(resource.stream()).thenReturn(input);
+    when(resource.name()).thenReturn("test.properties");
     when(configuration.get(anyString(),  eq(String.class))).thenReturn(Optional.of("value"));
-    when(configParser.parse(input)).thenReturn(configuration);
+    when(resourceParser.parse(input)).thenReturn(configuration);
 
     Configuration config = loader.load(resource);
 
@@ -81,7 +80,7 @@ class PropertiesLoaderTest {
   @Test
   @DisplayName("should throw NullPointerException when input stream is null")
   void shouldThrowNullPointerExceptionWhenInputStreamIsNull() {
-    when(resource.inputStream()).thenReturn(null);
+    when(resource.stream()).thenReturn(null);
 
     assertThrows(NullPointerException.class, () -> loader.load(resource));
   }
@@ -92,22 +91,22 @@ class PropertiesLoaderTest {
     String content = "key=value";
     InputStream input = new ByteArrayInputStream(content.getBytes());
 
-    when(resource.inputStream()).thenReturn(input);
-    when(resource.resourceName()).thenReturn(null);
+    when(resource.stream()).thenReturn(input);
+    when(resource.name()).thenReturn(null);
 
     assertThrows(NullPointerException.class, () -> loader.load(resource));
   }
 
   @Test
-  @DisplayName("should throw ConfigLoaderException when Properties is malformed")
+  @DisplayName("should throw ResourceLoaderException when Properties is malformed")
   void shouldThrowConfigLoaderExceptionWhenPropertiesIsMalformed() throws IOException {
     String content = "key=value";
     InputStream input = new ByteArrayInputStream(content.getBytes());
 
-    when(resource.inputStream()).thenReturn(input);
-    when(resource.resourceName()).thenReturn("malformed.properties");
-    when(configParser.parse(input)).thenThrow(new IOException("Malformed properties"));
+    when(resource.stream()).thenReturn(input);
+    when(resource.name()).thenReturn("malformed.properties");
+    when(resourceParser.parse(input)).thenThrow(new IOException("Malformed properties"));
 
-    assertThrows(ConfigLoaderException.class, () -> loader.load(resource));
+    assertThrows(ResourceLoaderException.class, () -> loader.load(resource));
   }
 }

@@ -8,9 +8,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import io.github.liana.config.core.exception.ConfigProviderException;
-import io.github.liana.config.core.ConfigResource;
-import io.github.liana.config.core.ConfigResourceReference;
+import io.github.liana.config.core.ResourceIdentifier;
+import io.github.liana.config.core.ResourceStream;
+import io.github.liana.config.core.exception.ResourceProviderException;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
@@ -29,7 +29,7 @@ class ClasspathProviderTest {
   private ClassLoader classLoader;
 
   @Mock
-  private ConfigResourceReference reference;
+  private ResourceIdentifier resourceIdentifier;
 
   private ClasspathProvider classpathProvider;
 
@@ -52,14 +52,14 @@ class ClasspathProviderTest {
     String resourceName = "test.yml";
     InputStream expectedStream = new ByteArrayInputStream("content".getBytes());
 
-    when(reference.resourceName()).thenReturn(resourceName);
+    when(resourceIdentifier.resourceName()).thenReturn(resourceName);
     when(classLoader.getResourceAsStream(resourceName)).thenReturn(expectedStream);
 
-    ConfigResource result = classpathProvider.resolveResource(reference);
+    ResourceStream result = classpathProvider.resolveResource(resourceIdentifier);
 
     assertNotNull(result);
-    assertEquals(resourceName, result.resourceName());
-    assertSame(expectedStream, result.inputStream());
+    assertEquals(resourceName, result.name());
+    assertSame(expectedStream, result.stream());
 
     verify(classLoader).getResourceAsStream(resourceName);
   }
@@ -71,15 +71,15 @@ class ClasspathProviderTest {
     String resourceName = "test";
     String resolved = "test.yaml";
 
-    when(reference.resourceName()).thenReturn(resourceName);
+    when(resourceIdentifier.resourceName()).thenReturn(resourceName);
     when(classLoader.getResourceAsStream("test.properties")).thenReturn(null);
     when(classLoader.getResourceAsStream("test.yaml"))
         .thenReturn(new ByteArrayInputStream("abc".getBytes()));
 
-    ConfigResource result = classpathProvider.resolveResource(reference);
+    ResourceStream result = classpathProvider.resolveResource(resourceIdentifier);
 
     assertNotNull(result);
-    assertEquals(resolved, result.resourceName());
+    assertEquals(resolved, result.name());
 
     verify(classLoader).getResourceAsStream("test.properties");
     verify(classLoader).getResourceAsStream("test.yaml");
@@ -91,12 +91,12 @@ class ClasspathProviderTest {
   void shouldThrowWhenResourceNotFound() {
     String resourceName = "notfound.yml";
 
-    when(reference.resourceName()).thenReturn(resourceName);
+    when(resourceIdentifier.resourceName()).thenReturn(resourceName);
     when(classLoader.getResourceAsStream(resourceName)).thenReturn(null);
 
-    ConfigProviderException ex = assertThrows(
-        ConfigProviderException.class,
-        () -> classpathProvider.resolveResource(reference)
+    ResourceProviderException ex = assertThrows(
+        ResourceProviderException.class,
+        () -> classpathProvider.resolveResource(resourceIdentifier)
     );
 
     assertEquals("config resource not found: " + resourceName, ex.getMessage());
@@ -105,31 +105,31 @@ class ClasspathProviderTest {
   }
 
   @Test
-  @DisplayName("should throw NullPointerException when reference is null")
-  void shouldThrowWhenReferenceIsNull() {
+  @DisplayName("should throw NullPointerException when identifier is null")
+  void shouldThrowWhenIdentifierIsNull() {
     assertThrows(NullPointerException.class, () -> classpathProvider.resolveResource(null));
   }
 
   @Test
   @DisplayName("should throw IllegalArgumentException when resource name is null")
   void shouldThrowWhenResourceNameNull() {
-    when(reference.resourceName()).thenReturn(null);
+    when(resourceIdentifier.resourceName()).thenReturn(null);
 
     assertThrows(IllegalArgumentException.class,
-        () -> classpathProvider.resolveResource(reference));
+        () -> classpathProvider.resolveResource(resourceIdentifier));
 
-    verify(reference).resourceName();
+    verify(resourceIdentifier).resourceName();
   }
 
   @Test
   @DisplayName("should throw IllegalArgumentException when resource name is blank")
   void shouldThrowWhenResourceNameBlank() {
-    when(reference.resourceName()).thenReturn("");
+    when(resourceIdentifier.resourceName()).thenReturn("");
 
     assertThrows(IllegalArgumentException.class,
-        () -> classpathProvider.resolveResource(reference));
+        () -> classpathProvider.resolveResource(resourceIdentifier));
 
-    verify(reference).resourceName();
+    verify(resourceIdentifier).resourceName();
   }
 
   @Test
@@ -143,13 +143,13 @@ class ClasspathProviderTest {
       String resourceName = "thread-test.yml";
       InputStream stream = new ByteArrayInputStream("x".getBytes());
 
-      when(reference.resourceName()).thenReturn(resourceName);
+      when(resourceIdentifier.resourceName()).thenReturn(resourceName);
       when(classLoader.getResourceAsStream(resourceName)).thenReturn(stream);
 
-      ConfigResource result = providerUsingThreadCL.resolveResource(reference);
+      ResourceStream result = providerUsingThreadCL.resolveResource(resourceIdentifier);
 
       assertNotNull(result);
-      assertSame(stream, result.inputStream());
+      assertSame(stream, result.stream());
       verify(classLoader).getResourceAsStream(resourceName);
 
     } finally {
@@ -164,12 +164,12 @@ class ClasspathProviderTest {
     ClassLoader loader = mock(ClassLoader.class);
     ClasspathProvider provider = new ClasspathProvider(loader, List.of("config", "app"));
 
-    when(reference.resourceName()).thenReturn("test.yml");
+    when(resourceIdentifier.resourceName()).thenReturn("test.yml");
 
     when(loader.getResourceAsStream("config/test.yml")).thenReturn(null);
     when(loader.getResourceAsStream("app/test.yml")).thenReturn(null);
 
-    assertThrows(ConfigProviderException.class, () -> provider.resolveResource(reference));
+    assertThrows(ResourceProviderException.class, () -> provider.resolveResource(resourceIdentifier));
 
     verify(loader).getResourceAsStream("config/test.yml");
     verify(loader).getResourceAsStream("app/test.yml");
@@ -182,11 +182,11 @@ class ClasspathProviderTest {
     ClassLoader loader = mock(ClassLoader.class);
     ClasspathProvider provider = new ClasspathProvider(loader, null);
 
-    when(reference.resourceName()).thenReturn("file.yml");
+    when(resourceIdentifier.resourceName()).thenReturn("file.yml");
     when(loader.getResourceAsStream("file.yml")).thenReturn(null);
     when(loader.getResourceAsStream("config/file.yml")).thenReturn(null);
 
-    assertThrows(ConfigProviderException.class, () -> provider.resolveResource(reference));
+    assertThrows(ResourceProviderException.class, () -> provider.resolveResource(resourceIdentifier));
 
     verify(loader).getResourceAsStream("file.yml");
     verify(loader).getResourceAsStream("config/file.yml");
@@ -199,11 +199,11 @@ class ClasspathProviderTest {
     ClassLoader loader = mock(ClassLoader.class);
     ClasspathProvider provider = new ClasspathProvider(loader, List.of());
 
-    when(reference.resourceName()).thenReturn("file.yml");
+    when(resourceIdentifier.resourceName()).thenReturn("file.yml");
     when(loader.getResourceAsStream("file.yml")).thenReturn(null);
     when(loader.getResourceAsStream("config/file.yml")).thenReturn(null);
 
-    assertThrows(ConfigProviderException.class, () -> provider.resolveResource(reference));
+    assertThrows(ResourceProviderException.class, () -> provider.resolveResource(resourceIdentifier));
 
     verify(loader).getResourceAsStream("file.yml");
     verify(loader).getResourceAsStream("config/file.yml");
@@ -211,17 +211,17 @@ class ClasspathProviderTest {
 
   @Test
   @SuppressWarnings("resource")
-  @DisplayName("should throw ConfigProviderException when no default extension resolves resource")
+  @DisplayName("should throw ResourceProviderException when no default extension resolves resource")
   void shouldThrowWhenNoDefaultExtensionResolvesResource() {
     String resourceName = "missing";
 
-    when(reference.resourceName()).thenReturn(resourceName);
+    when(resourceIdentifier.resourceName()).thenReturn(resourceName);
     when(classLoader.getResourceAsStream("missing.properties")).thenReturn(null);
     when(classLoader.getResourceAsStream("missing.yaml")).thenReturn(null);
     when(classLoader.getResourceAsStream("missing.yml")).thenReturn(null);
 
-    ConfigProviderException ex = assertThrows(ConfigProviderException.class,
-        () -> classpathProvider.resolveResource(reference));
+    ResourceProviderException ex = assertThrows(ResourceProviderException.class,
+        () -> classpathProvider.resolveResource(resourceIdentifier));
 
     assertEquals(
         "config resource not found with any default extension: " + resourceName,

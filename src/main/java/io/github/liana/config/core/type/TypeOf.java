@@ -27,8 +27,7 @@ public abstract class TypeOf<T> {
    * Constructs a new {@code TypeOf} instance and captures the generic type parameter.
    *
    * <p>This constructor must be invoked via an anonymous class to properly capture the type
-   * parameter.
-   * Direct subclassing without specifying the generic type will result in an exception.
+   * parameter. Direct subclassing without specifying the generic type will result in an exception.
    *
    * @throws IllegalArgumentException if the class is not properly parameterized as an anonymous
    *                                  class with a concrete type.

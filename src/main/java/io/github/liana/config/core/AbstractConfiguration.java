@@ -15,11 +15,21 @@ import java.util.Optional;
  * Base implementation of the {@link Configuration} interface that delegates value resolution to a
  * {@link ValueResolver}.
  *
- * <p>This class provides consistent behavior for all configuration retrieval methods,
- * including defensive copying, immutability guarantees, and optional-based null handling.
+ * <p>This abstract class provides consistent behavior for configuration retrieval, including:
+ * <ul>
+ *   <li>Defensive copying of lists and maps to ensure immutability.</li>
+ *   <li>Optional-based null handling for absent values.</li>
+ *   <li>Validation of keys and type arguments.</li>
+ * </ul>
  *
- * <p>Concrete implementations only need to provide the underlying {@link ValueResolver},
- * which defines how values are obtained and converted.
+ * <p>Concrete subclasses are responsible for providing the underlying {@link ValueResolver},
+ * which defines the actual mechanism to obtain and convert configuration values.
+ *
+ * <p><b>Thread Safety:</b> This class is thread-safe if the provided {@link ValueResolver} is
+ * thread-safe.
+ *
+ * <p><b>Immutability:</b> Instances are effectively immutable; internal state cannot be modified
+ * after construction.
  */
 public abstract class AbstractConfiguration implements Configuration {
 
@@ -27,7 +37,6 @@ public abstract class AbstractConfiguration implements Configuration {
   private static final String KEY_BLANK_MSG = "key must not be blank";
   private static final String CLAZZ_NULL_MSG = "clazz must not be null";
   private static final String TYPE_NULL_MSG = "type must not be null";
-
   private final ValueResolver resolver;
 
   /**
@@ -42,6 +51,8 @@ public abstract class AbstractConfiguration implements Configuration {
 
   /**
    * {@inheritDoc}
+   *
+   * <p>Validates that the key is non-null and non-blank, then delegates to {@link ValueResolver}.
    */
   @Override
   public boolean containsKey(String key) {
@@ -53,8 +64,13 @@ public abstract class AbstractConfiguration implements Configuration {
   /**
    * {@inheritDoc}
    *
-   * <p>Delegates directly to the underlying {@link ValueResolver}, supporting complex and generic
-   * class resolution such as lists, maps, and POJOs.
+   * <p>Delegates to {@link ValueResolver#get(String, Type)} to obtain and convert the value.
+   *
+   * @param <T>   the type of value
+   * @param key   the key to look up
+   * @param clazz the class of the value
+   * @return an {@link Optional} containing the value, or empty if not found
+   * @throws NullPointerException if {@code key} or {@code clazz} is null
    */
   @Override
   public <T> Optional<T> get(String key, Class<T> clazz) {
@@ -67,6 +83,13 @@ public abstract class AbstractConfiguration implements Configuration {
   /**
    * {@inheritDoc}
    *
+   * <p>Delegates to {@link ValueResolver#get(String, Type)} for generic or parameterized types.
+   *
+   * @param <T>  the type of value
+   * @param key  the key to look up
+   * @param type the {@link TypeOf} representing the desired type
+   * @return an {@link Optional} containing the value, or empty if not found
+   * @throws NullPointerException if {@code key} or {@code type} is null
    */
   @Override
   public <T> Optional<T> get(String key, TypeOf<T> type) {
@@ -79,8 +102,14 @@ public abstract class AbstractConfiguration implements Configuration {
   /**
    * {@inheritDoc}
    *
-   * <p>The returned list is immutable and safe to share. If no values are found, returns
+   * <p>Returns an immutable list. If the value is absent or empty, returns
    * {@link Collections#emptyList()}.
+   *
+   * @param <E>   the element type
+   * @param key   the key to look up
+   * @param clazz the class of list elements
+   * @return an immutable list of values
+   * @throws NullPointerException if {@code key} or {@code clazz} is null
    */
   @Override
   public <E> List<E> getList(String key, Class<E> clazz) {
@@ -94,8 +123,14 @@ public abstract class AbstractConfiguration implements Configuration {
   /**
    * {@inheritDoc}
    *
-   * <p>The returned map is unmodifiable and safe to share. If no entries are found, returns
+   * <p>Returns an unmodifiable map. If the value is absent or empty, returns
    * {@link Collections#emptyMap()}.
+   *
+   * @param <V>   the value type
+   * @param key   the key to look up
+   * @param clazz the class of map values
+   * @return an unmodifiable map of values
+   * @throws NullPointerException if {@code key} or {@code clazz} is null
    */
   @Override
   public <V> Map<String, V> getMap(String key, Class<V> clazz) {
@@ -109,8 +144,10 @@ public abstract class AbstractConfiguration implements Configuration {
   /**
    * {@inheritDoc}
    *
-   * <p>Provides direct access to the root configuration as an unmodifiable map. This is often used
-   * for diagnostic or introspection purposes.
+   * <p>Returns an unmodifiable view of the root configuration map. Safe for introspection or
+   * diagnostics.
+   *
+   * @return the root configuration as an unmodifiable map
    */
   @Override
   public Map<String, Object> getRootAsMap() {
@@ -121,15 +158,12 @@ public abstract class AbstractConfiguration implements Configuration {
   /**
    * {@inheritDoc}
    *
-   * <p>This implementation delegates to {@link ValueResolver#getRootAs(Type)}, performing
-   * the conversion of the entire configuration tree into an instance of the specified type.
-   *
-   * <p>The resulting object can represent a structured POJO, a generic collection,
-   * or any complex type supported by the underlying resolver.
+   * <p>Delegates to {@link ValueResolver#getRootAs(Type)} for conversion to a specific type.
    *
    * @param <T>  the target type
    * @param type the reflective type representing the desired structure
    * @return an {@link Optional} containing the converted root object, or empty if conversion fails
+   * @throws NullPointerException if {@code type} is null
    */
   @Override
   public <T> Optional<T> getRootAs(Type type) {

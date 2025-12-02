@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.github.liana.config.api.Placeholder;
 import io.github.liana.config.core.exception.ConversionException;
+import io.github.liana.config.internal.ImmutableConfigMap;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
@@ -70,7 +71,7 @@ public final class JacksonInterpolator extends AbstractJacksonComponent {
    * @throws IllegalStateException if the interpolation produces an unexpected null value
    */
   public Map<String, Object> interpolate(Map<String, Object> source, Placeholder placeholder,
-      Map<String, String> variables) {
+      ImmutableConfigMap variables) {
 
     requireNonNull(source, "source map must not be null");
     requireNonNull(placeholder, "placeholder must not be null");
@@ -100,7 +101,7 @@ public final class JacksonInterpolator extends AbstractJacksonComponent {
    *                               interpolation process
    */
   private void processNode(JsonNode node, Placeholder placeholder,
-      Map<String, String> variables) {
+      ImmutableConfigMap variables) {
 
     Optional.ofNullable(node)
         .orElseThrow(() -> new IllegalStateException(
@@ -122,7 +123,7 @@ public final class JacksonInterpolator extends AbstractJacksonComponent {
    * @param variables   the variables to resolve placeholders with; must not be null
    */
   private void processObject(ObjectNode node, Placeholder placeholder,
-      Map<String, String> variables) {
+      ImmutableConfigMap variables) {
     Set<Map.Entry<String, JsonNode>> properties = node.properties();
     for (Map.Entry<String, JsonNode> entry : properties) {
       applyIfTextual(entry.getValue(),
@@ -140,7 +141,7 @@ public final class JacksonInterpolator extends AbstractJacksonComponent {
    * @param variables   the variables to resolve placeholders with; must not be null
    */
   private void processArray(ArrayNode node, Placeholder placeholder,
-      Map<String, String> variables) {
+      ImmutableConfigMap variables) {
     for (int i = 0; i < node.size(); i++) {
       final int index = i;
       applyIfTextual(node.get(i), interpolated -> node.set(index, textNode(interpolated)),
@@ -159,7 +160,7 @@ public final class JacksonInterpolator extends AbstractJacksonComponent {
    */
   private void applyIfTextual(JsonNode node, Consumer<String> consumer,
       Placeholder placeholder,
-      Map<String, String> variables) {
+      ImmutableConfigMap variables) {
     if (!node.isTextual()) {
       processNode(node, placeholder, variables);
       return;
@@ -170,7 +171,7 @@ public final class JacksonInterpolator extends AbstractJacksonComponent {
       return;
     }
 
-    String interpolated = placeholder.replaceIfAllResolvable(original, variables).orElse(original);
+    String interpolated = placeholder.replaceIfAllResolvable(original, variables.toMap()).orElse(original);
     if (!Objects.equals(interpolated, original)) {
       consumer.accept(interpolated);
     }

@@ -1,69 +1,42 @@
 package io.github.liana.config.loaders;
 
-import static io.github.liana.config.core.ConfigFileFormat.PROPERTIES;
-import static java.util.Objects.requireNonNull;
+import static io.github.liana.config.core.FileFormat.PROPERTIES;
 
-import io.github.liana.config.core.ConfigFileFormat;
-import io.github.liana.config.core.ConfigParser;
-import io.github.liana.config.spi.ConfigLoader;
-import io.github.liana.config.core.ConfigResource;
-import io.github.liana.config.api.Configuration;
-import io.github.liana.config.core.exception.ConfigLoaderException;
-import java.io.IOException;
-import java.io.InputStream;
+import io.github.liana.config.core.ResourceParser;
+import io.github.liana.config.spi.ResourceLoader;
 import java.util.Set;
 
 /**
- * Implementation of {@link ConfigLoader} for Properties configuration files.
+ * Loads PROPERTIES configuration resources.
+ *
+ * <p>This loader handles PROPERTIES files using a provided {@link ResourceParser}. It implements
+ * {@link ResourceLoader} and supports the standard PROPERTIES extension ("properties").
+ *
+ * <p>Instances are immutable. Thread-safety depends on the provided {@link ResourceParser}.
+ * This loader focuses exclusively on parsing PROPERTIES; it does not merge or interpolate
+ * configurations.
  */
-public class PropertiesLoader implements ConfigLoader {
-
-  private final ConfigParser configParser;
+public class PropertiesLoader extends AbstractResourceLoader {
 
   /**
-   * Creates a new {@code PropertiesLoader} with the specified configuration parser.
+   * Constructs a new loader with the given parser.
    *
-   * <p>The provided parser will be used to transform Properties resources into
-   * {@link Configuration} instances.
-   *
-   * @param configParser the parser responsible for interpreting Properties input streams (must not
-   *                     be null)
-   * @throws NullPointerException if {@code configParser} is {@code null}
+   * @param parser the {@link ResourceParser} to use for parsing input streams; must not be
+   *               {@code null}
+   * @throws NullPointerException if parser is {@code null}
    */
-  public PropertiesLoader(ConfigParser configParser) {
-    this.configParser = requireNonNull(configParser, "configParser must not be null");
+  public PropertiesLoader(ResourceParser parser) {
+    super(parser);
   }
 
   /**
-   * Gets the configuration file format supported by this loader.
+   * {@inheritDoc}
    *
-   * <p>This implementation specifically returns the Properties format.
-   *
-   * @return an immutable {@link Set} of supported file extensions
-   * @see ConfigFileFormat#PROPERTIES
+   * <p>Returns the set of file extensions this loader supports, as defined by the PROPERTIES
+   * format.
    */
   @Override
-  public Set<String> getKeys() {
+  protected Set<String> getSupportedExtensions() {
     return PROPERTIES.getExtensions();
-  }
-
-  /**
-   * Loads and parses a Properties configuration resource.
-   *
-   * @param resource The configuration resource to load (must not be null).
-   * @return the parsed {@link Configuration} from the Properties resource.
-   * @throws NullPointerException  If {@code resource} or any of its required fields (input stream,
-   *                               resource name) are null.
-   * @throws ConfigLoaderException if the resource is invalid or the Properties is malformed.
-   */
-  @Override
-  public Configuration load(ConfigResource resource) {
-    validateResource(resource);
-    try (InputStream input = resource.inputStream()) {
-      return configParser.parse(input);
-    } catch (IOException e) {
-      throw new ConfigLoaderException(
-          "Error loading Properties config from " + resource.resourceName(), e);
-    }
   }
 }

@@ -3,7 +3,8 @@ package io.github.liana.config.core;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.List;
+import io.github.liana.config.internal.ImmutableConfigSet;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,7 +18,7 @@ class ResourceNameValidatorTest {
 
   @BeforeEach
   void setUp() {
-    validator = new ResourceNameValidator(List.of("config"));
+    validator = new ResourceNameValidator(ImmutableConfigSet.of(Set.of("config")));
   }
 
   @ParameterizedTest

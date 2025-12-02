@@ -11,17 +11,13 @@ import java.util.Map;
  * {@link ObjectMapper}. The parsed data is converted into a {@link Map} and passed to the parent
  * {@link AbstractConfiguration}.
  *
- * <p>Example usage:
- *
- * <pre>{@code
- * ObjectMapper mapper = new ObjectMapper();
- * try (InputStream input = Files.newInputStream(Path.of("config.json"))) {
- *   JacksonConfiguration config = new JacksonConfiguration(mapper, input);
- *   Optional<String> value = config.get("some.key", String.class);
- * }
- * }</pre>
- *
  * <p>Instances of this class are immutable once constructed.
+ *
+ * <p><b>Thread Safety:</b> Instances are thread-safe as long as the provided {@link ObjectMapper}
+ * is thread-safe and the input stream is not modified concurrently.
+ *
+ * <p><b>Responsibilities:</b> Parsing the input stream into a map for configuration retrieval.
+ * Does not perform merging or dynamic updates of the configuration after construction.
  */
 public class JacksonConfiguration extends AbstractConfiguration {
 
@@ -29,9 +25,10 @@ public class JacksonConfiguration extends AbstractConfiguration {
    * Creates a new {@code JacksonConfiguration} by reading configuration data from the given
    * {@link InputStream}.
    *
-   * @param mapper the {@link ObjectMapper} used to parse the input, must not be null
-   * @param inputStream  the {@link InputStream} containing the configuration data, must not be null
-   * @throws NullPointerException if {@code mapper} or {@code inputStream} are null
+   * @param mapper      the {@link ObjectMapper} used to parse the input, must not be {@code null}
+   * @param inputStream the {@link InputStream} containing the configuration data, must not be
+   *                    {@code null}
+   * @throws NullPointerException if {@code mapper} or {@code inputStream} are {@code null}
    */
   protected JacksonConfiguration(ObjectMapper mapper, InputStream inputStream) {
     super(new JacksonValueResolver(mapper, inputStream));

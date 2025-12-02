@@ -15,13 +15,22 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Resolves configuration values from a source map using Jackson for JSON tree navigation.
+ * Resolves configuration values from a source map or JSON input using Jackson.
  *
- * <p>This implementation converts the source map into a
- * {@link com.fasterxml.jackson.databind.JsonNode} tree and supports type-safe retrieval of values,
- * lists, and maps, as well as conversion of the entire root configuration into a specified type.
+ * <p>This implementation stores the source as a {@link com.fasterxml.jackson.databind.JsonNode}
+ * tree,
+ * caches resolved nodes, and performs type-safe conversion for single values, lists, and maps.
  *
- * <p>Instances of this class are immutable and thread-safe for read operations.
+ * <p>Instances are immutable and thread-safe for read operations.
+ *
+ * <p>Construction options:
+ * <ul>
+ *   <li>From a {@link Map} using the default {@link ObjectMapper}</li>
+ *   <li>From a {@link Map} with a custom {@link ObjectMapper}</li>
+ *   <li>From a JSON {@link InputStream} with a custom {@link ObjectMapper}</li>
+ * </ul>
+ *
+ * <p>Conversion or parsing failures are wrapped in {@link ConversionException}.
  */
 public final class JacksonValueResolver extends AbstractJacksonComponent implements ValueResolver {
 
@@ -83,9 +92,6 @@ public final class JacksonValueResolver extends AbstractJacksonComponent impleme
         String.format(MSG_CONVERT_VALUE, source.getClass().getTypeName()));
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public boolean containsKey(String key) {
     requireNonNull(key, MSG_KEY_NULL);
@@ -93,12 +99,8 @@ public final class JacksonValueResolver extends AbstractJacksonComponent impleme
     return !node.isMissingNode();
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T> Optional<T> get(String key, Type targetType) {
-    System.out.println("esta es la key: " + key);
     requireNonNull(key, MSG_KEY_NULL);
     requireNonNull(targetType, MSG_TARGET_TYPE_NULL);
 
@@ -110,9 +112,6 @@ public final class JacksonValueResolver extends AbstractJacksonComponent impleme
     return Optional.ofNullable(convertValue(node, constructJavaType(targetType)));
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <E> List<E> getList(String key, Class<E> targetType) {
     requireNonNull(key, MSG_KEY_NULL);
@@ -132,9 +131,6 @@ public final class JacksonValueResolver extends AbstractJacksonComponent impleme
     return Optional.ofNullable(list).orElse(Collections.emptyList());
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <V> Map<String, V> getMap(String key, Class<V> targetType) {
     requireNonNull(key, MSG_KEY_NULL);
@@ -153,18 +149,12 @@ public final class JacksonValueResolver extends AbstractJacksonComponent impleme
     return Optional.ofNullable(resultMap).orElse(Collections.emptyMap());
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public Map<String, Object> getRootAsMap() {
     JavaType type = constructJavaType(MAP_TYPE.getType());
     return Collections.unmodifiableMap(new LinkedHashMap<>(convertValue(source, type)));
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
   public <T> Optional<T> getRootAs(Type targetType) {
     requireNonNull(targetType, MSG_TARGET_TYPE_NULL);

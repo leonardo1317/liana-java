@@ -2,7 +2,6 @@ package io.github.liana.config.core;
 
 import static java.util.Objects.requireNonNull;
 
-import io.github.liana.config.spi.Strategy;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -22,23 +21,15 @@ import java.util.Set;
  * to guarantee immutability and null-safety. Duplicate keys will cause the last registered strategy
  * for that key to override the previous one.
  *
- * <h3>Example usage:</h3>
- *
- * <pre>{@code
- * StrategyRegistry<String, ConfigLoader> registry =
- *     new StrategyRegistry<>(new JsonLoader(), new YamlLoader());
- *
- * Optional<ConfigLoader> loader = registry.get("json");
- * }</pre>
+ * <p>Instances are thread-safe due to immutability.
  *
  * @param <K> the type of keys used to look up strategies
  * @param <V> the type of strategy stored, must implement {@link Strategy}
  */
-public final class StrategyRegistry<K, V extends Strategy<K>> {
+public class StrategyRegistry<K, V extends Strategy<K>> {
 
   private final Map<K, V> strategies;
   private final KeyNormalizer<K> keyNormalizer;
-
   private static final String KEY_MUST_NOT_BE_NULL = "key must not be null";
   private static final String KEY_NORMALIZER_MUST_NOT_BE_NULL = "keyNormalizer must not be null";
   private static final String STRATEGIES_VARARGS_ARRAY_MUST_NOT_BE_NULL = "strategies varargs array must not be null";
@@ -87,15 +78,6 @@ public final class StrategyRegistry<K, V extends Strategy<K>> {
   /**
    * Registers the given strategy into the provided map by associating each of its keys (after
    * normalization) with the strategy instance.
-   *
-   * <p>Steps performed:
-   * <ul>
-   *   <li>Copies the strategy keys into an immutable collection to prevent
-   *       concurrent modification or side effects.</li>
-   *   <li>Normalizes each key using the {@link KeyNormalizer}.</li>
-   *   <li>Puts the normalized key and strategy into the map, overriding any
-   *       existing mapping for that key.</li>
-   * </ul>
    *
    * @param strategiesMap the mutable map where strategies are registered
    * @param strategy      the strategy to register, must not be {@code null}

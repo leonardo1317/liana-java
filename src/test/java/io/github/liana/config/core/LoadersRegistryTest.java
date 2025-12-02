@@ -8,7 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.liana.config.spi.ConfigLoader;
+import io.github.liana.config.spi.ResourceLoader;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -42,7 +42,7 @@ class LoadersRegistryTest {
   @DisplayName("should create registry containing default loaders and custom ones")
   void shouldCreateRegistryContainingDefaultAndCustomLoaders() {
     List<String> expected = List.of("properties", "yaml", "yml", "json", "xml", "toml");
-    ConfigLoader customLoader = mock(ConfigLoader.class);
+    ResourceLoader customLoader = mock(ResourceLoader.class);
     ObjectMapper objectMapper = mock(ObjectMapper.class);
 
     when(customLoader.getKeys()).thenReturn(Set.of("toml"));
@@ -56,7 +56,7 @@ class LoadersRegistryTest {
         jacksonMappers
     );
 
-    StrategyRegistry<String, ConfigLoader> registry = loadersRegistry.create();
+    StrategyRegistry<String, ResourceLoader> registry = loadersRegistry.create();
 
     assertNotNull(registry);
     assertEquals(6, registry.getAllKeys().size());
@@ -79,7 +79,7 @@ class LoadersRegistryTest {
         jacksonMappers
     );
 
-    StrategyRegistry<String, ConfigLoader> registry = loadersRegistry.create();
+    StrategyRegistry<String, ResourceLoader> registry = loadersRegistry.create();
 
     assertNotNull(registry);
     assertEquals(5, registry.getAllKeys().size());
