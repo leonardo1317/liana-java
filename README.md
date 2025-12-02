@@ -51,7 +51,8 @@ Liana provides essential configuration capabilities designed for flexibility and
 - **Thread-safe and immutable**: Config data is immutable after loading.
 - **Optional verbose logging**: Detailed logs for resource loading and resolution.
 - **Strict file validation**: Validates resource names against security and compatibility rules before loading.
-
+- **Custom Loaders and Providers**: Register your own resource loaders and providers to extend Liana’s functionality.
+- **Per-file provider specification**: Assign a specific provider for individual resource files by prefixing the filename with providerName:. This allows mixing resources from different sources in the same configuration load.
 ---
 
 ## Installation
@@ -81,16 +82,26 @@ dependencies {
 ### Define your configuration source:
 
 ```java
-ConfigResourceLocation location = ConfigResourceLocations.builder()
-    .addResources("application.yaml", "application-${profile}.yaml")
-    .addVariables("profile", "dev")
+ResourceLocation location = ResourceLocation.builder()
+    .provider("classpath") // global provider for resources without explicit provider
+    .baseDirectories("", "config")
+    .addResources(
+        "application.properties",  // loaded via global provider ("classpath")
+        "classpath:application.json", // loaded explicitly via classpath provider
+        "file:application.xml"     // loaded explicitly via file system provider
+    )
+    .addVariables(
+        "profile", "dev",
+        "region", "us-east-1"
+    )
     .verboseLogging(true) // optional, default is false. Enables detailed logs of the loading process.
+    .placeholders(Placeholder.builder().prefix("${").suffix("}").delimiter(":").build())
     .build();
 ```
 If you define the configuration like this:
 
 ```java
-ConfigResourceLocation location = ConfigResourceLocations.builder().build();
+ResourceLocation location = ResourceLocation.builder().build();
 ```
 
 Liana applies the following **defaults**:
@@ -209,26 +220,27 @@ public class ServerConfig {
 ### Load and read configuration:
 
 ```java
-ConfigReader reader = LianaConfig.getInstance().load(location);
-String appName = reader.getString("app.name", "DefaultApp");
+ConfigurationManager manager = ConfigurationManager.builder().build();
+Configuration configuration = manager.load(location);
+String appName = configuration.getString("app.name", "DefaultApp");
 int port = reader.getInt("server.port", 8080);
 ```
 
 ### Load as POJO:
 
 ```java
-AppConfig config = reader.get("app", AppConfig.class, new AppConfig());
-List<ServerConfig> servers = reader.get("servers", new TypeOf<List<ServerConfig>>() {}, List.of());
+AppConfig config = configuration.get("app", AppConfig.class, new AppConfig());
+List<ServerConfig> servers = configuration.get("servers", new TypeOf<List<ServerConfig>>() {}, List.of());
 ```
 
 ### Optional Variants:
 
 ```java
-Optional<String> optionalAppName = reader.get("app.name", String.class);
-Optional<Integer> optionalPort = reader.get("server.port", Integer.class);
+Optional<String> optionalAppName = configuration.get("app.name", String.class);
+Optional<Integer> optionalPort = configuration.get("server.port", Integer.class);
 
-Optional<AppConfig> optionalConfig = reader.get("app", AppConfig.class);
-Optional<List<ServerConfig>> optionalServers = reader.get("servers", new TypeOf<List<ServerConfig>>() {});
+Optional<AppConfig> optionalConfig = configuration.get("app", AppConfig.class);
+Optional<List<ServerConfig>> optionalServers = configuration.get("servers", new TypeOf<List<ServerConfig>>() {});
 ```
 
 ---
