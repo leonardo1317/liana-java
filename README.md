@@ -8,9 +8,12 @@
 
 ## Overview
 
-**Liana** is a lightweight, framework agnostic Java configuration library designed for simplicity and flexibility. Inspired by the liana plant that adapts to any structure, Liana adapts to your application's needs not the other way around.
+**Liana** is a lightweight, framework agnostic Java configuration library designed for simplicity
+and flexibility. Inspired by the liana plant that adapts to any structure, Liana adapts to your
+application's needs not the other way around.
 
-Liana abstracts configuration complexity and offers a unified API to load configurations from [supported formats](#supported-formats) without forcing the use of heavyweight frameworks.
+Liana abstracts configuration complexity and offers a unified API to load configurations
+from [supported formats](#supported-formats) without forcing the use of heavyweight frameworks.
 
 ---
 
@@ -20,10 +23,10 @@ Liana abstracts configuration complexity and offers a unified API to load config
 
 Liana prioritizes:
 
-- ⚡ **Minimalism**: No forced conventions or complex setups.
-- 🔄 **Adaptability**: Works with supported formats and file structures.
-- 🪶 **Simplicity**: One-time load with cache for fast repeated access.
-- 🔍 **Clarity**: Supports placeholders, overrides, and variables.
+- **Minimalism**: No forced conventions or complex setups.
+- **Adaptability**: Works with supported formats and file structures.
+- **Simplicity**: One-time load with cache for fast repeated access.
+- **Clarity**: Supports placeholders, overrides, and variables.
 
 ---
 
@@ -38,43 +41,38 @@ Liana prioritizes:
 
 ## Key Features
 
-Liana provides essential configuration capabilities designed for flexibility and simplicity in Java applications:
+Liana provides essential configuration capabilities designed for flexibility and simplicity in Java
+applications:
 
-- **Multi-format support**: Load and merge multiple configuration files in [supported formats](#supported-formats).
+- **Multi-format support**: Load and merge multiple configuration files
+  in [supported formats](#supported-formats).
 - **Ordered overrides**: Later-loaded files override earlier ones for environment-specific layering.
-- **Custom placeholder resolution**: Replace placeholders (`${profile}` or `${profile:default}`) dynamically using variable maps.
-- **Deep interpolation**: Automatically interpolates placeholder variables across all textual nodes in nested structures.
+- **Custom placeholder resolution**: Replace placeholders (`${profile}` or `${profile:default}`)
+  dynamically using variable maps.
+- **Deep interpolation**: Automatically interpolates placeholder variables across all textual nodes
+  in nested structures.
 - **Variable injection**: Inject variables via fluent API or programmatically.
-- **Type-safe access**: Retrieve config as `String`, `int`, `boolean`, lists, maps, arrays, or POJOs.
-- **POJO and generic mapping**: Deserialize config sections into POJOs or generic structures using `TypeOf<T>`. POJO fields should be private with public getters and setters.
-- **Complete config snapshot**: Access the full config tree as an unmodifiable `Map<String, Object>` or a full POJO.
+- **Type-safe access**: Retrieve config as `String`, `int`, `boolean`, lists, maps, arrays, or
+  POJOs.
+- **POJO and generic mapping**: Deserialize config sections into POJOs or generic structures using
+  `TypeOf<T>`. POJO fields should be private with public getters and setters.
+- **Complete config snapshot**: Access the full config tree as an unmodifiable `Map<String, Object>`
+  or a full POJO.
 - **Thread-safe and immutable**: Config data is immutable after loading.
 - **Optional verbose logging**: Detailed logs for resource loading and resolution.
-- **Strict file validation**: Validates resource names against security and compatibility rules before loading.
-- **Custom Loaders and Providers**: Register your own resource loaders and providers to extend Liana’s functionality.
-- **Per-file provider specification**: Assign a specific provider for individual resource files by prefixing the filename with providerName:. This allows mixing resources from different sources in the same configuration load.
+- **Strict file validation**: Validates resource names against security and compatibility rules
+  before loading.
+- **Custom Loaders and Providers**: Register your own resource loaders and providers to extend
+  Liana’s functionality.
+- **Per-file provider specification**: Assign a specific provider for individual resource files by
+  prefixing the filename with providerName:. This allows mixing resources from different sources in
+  the same configuration load.
+
 ---
 
 ## Installation
 
-**Maven:**
-
-```xml
-<dependency>
-  <groupId>io.github.liana</groupId>
-  <artifactId>liana-config</artifactId>
-  <version>0.1.0</version>
-</dependency>
-```
-
-**Gradle:**
-
-```groovy
-dependencies {
-  implementation 'io.github.liana:liana-config:0.1.0'
-}
-```
-
+_Not available yet (coming soon)._
 ---
 
 ## Quick Start
@@ -83,21 +81,28 @@ dependencies {
 
 ```java
 ResourceLocation location = ResourceLocation.builder()
-    .provider("classpath") // global provider for resources without explicit provider
+    .provider("classpath") // Optional – if omitted, "classpath" is used as the default provider
     .baseDirectories("", "config")
     .addResources(
-        "application.properties",  // loaded via global provider ("classpath")
-        "classpath:application.json", // loaded explicitly via classpath provider
-        "file:application.xml"     // loaded explicitly via file system provider
+        "application.properties",              // loaded via provider ("classpath")
+        "application-${profile}.properties",   // resolved using variables
+        "classpath:application.json",          // explicit provider overrides global
+        "file:application.xml"                 // explicit file provider
     )
     .addVariables(
-        "profile", "dev",
-        "region", "us-east-1"
+        "profile", "dev"
     )
-    .verboseLogging(true) // optional, default is false. Enables detailed logs of the loading process.
-    .placeholders(Placeholder.builder().prefix("${").suffix("}").delimiter(":").build())
+    .verboseLogging(true) // Optional – default is false
+    .placeholders(        // Optional – default is ${var:default}
+        Placeholder.builder()
+            .prefix("${")
+            .suffix("}")
+            .delimiter(":")
+            .build()
+    )
     .build();
 ```
+
 If you define the configuration like this:
 
 ```java
@@ -116,11 +121,14 @@ Liana applies the following **defaults**:
 This means Liana will search the classpath for:
 
 1. A file named `application` (in any [supported format](#supported-formats)).
-2. A file matching the pattern `application-${profile}` (with `${profile}` resolved from the environment variable `LIANA_PROFILE`).
+2. A file matching the pattern `application-${profile}` (with `${profile}` resolved from the
+   environment variable `LIANA_PROFILE`).
 
 If `LIANA_PROFILE` is **not set**, Liana uses the default profile value: **default**.
 
-The placeholder system supports the `${key}` and `${key:default}` syntax. Placeholders can be resolved using variables provided through `.addVariables(...)` or `.addVariablesFromMap(...)`, and placeholders inside values are deeply interpolated across the full configuration structure.
+The placeholder system supports the `${key}` and `${key:default}` syntax. Placeholders can be
+resolved using variables provided through `.addVariables(...)` or `.addVariablesFromMap(...)`, and
+placeholders inside values are deeply interpolated across the full configuration structure.
 
 ### Example configuration files (per format):
 
@@ -154,8 +162,14 @@ servers:
     "name": "Liana"
   },
   "servers": [
-    { "host": "localhost", "port": 8080 },
-    { "host": "example.com", "port": 9090 }
+    {
+      "host": "localhost",
+      "port": 8080
+    },
+    {
+      "host": "example.com",
+      "port": 9090
+    }
   ]
 }
 ```
@@ -163,57 +177,33 @@ servers:
 **XML:**
 
 ```xml
+
 <config>
-    <app>
-        <name>Liana</name>
-    </app>
-    <servers>
-        <server>
-            <host>localhost</host>
-            <port>8080</port>
-        </server>
-        <server>
-            <host>example.com</host>
-            <port>9090</port>
-        </server>
-    </servers>
+  <app>
+    <name>Liana</name>
+  </app>
+  <servers>
+    <server>
+      <host>localhost</host>
+      <port>8080</port>
+    </server>
+    <server>
+      <host>example.com</host>
+      <port>9090</port>
+    </server>
+  </servers>
 </config>
 ```
 
 ### Example POJO classes:
 
 ```java
-public class AppConfig {
-  private String name;
+public record AppConfig(String name) {
 
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
 }
 
-public class ServerConfig {
-  private String host;
-  private int port;
+public record ServerConfig(String host, int port) {
 
-  public String getHost() {
-    return host;
-  }
-
-  public void setHost(String host) {
-    this.host = host;
-  }
-
-  public int getPort() {
-    return port;
-  }
-
-  public void setPort(int port) {
-    this.port = port;
-  }
 }
 ```
 
@@ -223,14 +213,15 @@ public class ServerConfig {
 ConfigurationManager manager = ConfigurationManager.builder().build();
 Configuration configuration = manager.load(location);
 String appName = configuration.getString("app.name", "DefaultApp");
-int port = reader.getInt("server.port", 8080);
+int port = configuration.getInt("server.port", 8080);
 ```
 
 ### Load as POJO:
 
 ```java
 AppConfig config = configuration.get("app", AppConfig.class, new AppConfig());
-List<ServerConfig> servers = configuration.get("servers", new TypeOf<List<ServerConfig>>() {}, List.of());
+List<ServerConfig> servers = configuration.get("servers", new TypeOf<List<ServerConfig>>() {
+}, List.of());
 ```
 
 ### Optional Variants:
@@ -240,87 +231,133 @@ Optional<String> optionalAppName = configuration.get("app.name", String.class);
 Optional<Integer> optionalPort = configuration.get("server.port", Integer.class);
 
 Optional<AppConfig> optionalConfig = configuration.get("app", AppConfig.class);
-Optional<List<ServerConfig>> optionalServers = configuration.get("servers", new TypeOf<List<ServerConfig>>() {});
+Optional<List<ServerConfig>> optionalServers = configuration.get("servers",
+    new TypeOf<List<ServerConfig>>() {
+    });
 ```
 
 ---
 
-## ConfigResourceLocation API
+## ConfigurationManager API
 
-### Strict File Validation
+The following table documents all available methods in the `ConfigurationManager` API:
 
-Liana enforces strict validation for file names to ensure security and compatibility across [supported formats](#supported-formats).
+| Method                                          | Description                                                                    | Example                                  |
+|-------------------------------------------------|--------------------------------------------------------------------------------|------------------------------------------|
+| `Configuration load(ResourceLocation location)` | Loads a configuration resource described by a ResourceLocation.                | `"manager.load(location)"`               |
+| `static ConfigurationManagerBuilder builder()`  | Creates a new builder for constructing a custom ConfigurationManager instance. | `ConfigurationManager.builder().build()` |
 
-### Allowed File Name Rules
+## ConfigurationManagerBuilder API
 
-| Rule                                                          | Description                                                    |
-| ------------------------------------------------------------- | -------------------------------------------------------------- |
-| Must not be blank                                             | Prevents empty names                                           |
-| Must not contain `..` or `../`                                | Prevents directory traversal                                   |
-| Must not start with `..`                                      | Ensures safe directory targeting                               |
-| Must normalize to a valid path                                | Path must resolve without invalid segments                     |
-| Must end with a valid extension from [supported formats](#supported-formats) | Enforces compatible configuration file types    |
+The following table documents all available methods in the `ConfigurationManagerBuilder` API:
 
-### Builder Methods
+| Method                                                                    | Description                                                                                                               | Example                                                        |
+|---------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|
+| `ConfigurationManagerBuilder addProviders(ResourceProvider... providers)` | Registers one or more ResourceProvider implementations. Providers resolve logical names into physical resources.          | `.addProviders(new ClasspathProvider(), new CustomProvider())` |
+| `ConfigurationManagerBuilder addLoaders(ResourceLoader... loaders)`       | Registers one or more ResourceLoader implementations. Loaders convert resolved resources into parsed configuration trees. | `.addLoaders(new JsonLoader(), new CustomLoader())`            |
+| `ConfigurationManager build()`                                            | Constructs a fully configured ConfigurationManager applying defaults for any unconfigured components.                     | `.build()`                                                     |
 
-| Method                          | Description                                                                                   | Example                                              |
-| ------------------------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `provider(String)`              | Sets the resource provider (e.g., "classpath"). **Defaults to "classpath" if not specified.** | `.provider("classpath")` *(optional)*                |
-| `addResource(String)`           | Adds a single resource file to be loaded.                                                     | `.addResource("app.yaml")`                           |
-| `addResources(String...)`       | Adds multiple resource files.                                                                 | `.addResources("app.yaml", "db.yaml")`               |
-| `addVariables(String...)`       | Adds substitution variables using key-value pairs.                                            | `.addVariables("profile", "dev")`                    |
-| `addVariablesFromMap(Map)`      | Adds substitution variables from a `Map<String, String>`.                                     | `.addVariablesFromMap(Map.of("profile", "prod"))`    |
-| `verboseLogging(boolean)`       | Enables or disables verbose logging for detailed load process output.                         | `.verboseLogging(true)`                              |
+## ResourceLocation API
 
----
+The following table documents all available methods in the `ResourceLocation` API:
 
-## ConfigReader API
+| Method                                     | Description                                                                                                                            | Example                                   |
+|--------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------|
+| `String provider()`                        | Returns the provider identifier responsible for loading resources (e.g., "classpath").                                                 | `"classpath"` *(optional)*                |
+| `ImmutableConfigSet baseDirectories()`     | Returns the ordered set of base directories where the provider should search for resources. Order affects lookup and merge precedence. | `["config", "defaults"]`                  |
+| `ImmutableConfigSet resourceNames()`       | Returns the logical resource names to load. Each logical name may resolve to multiple physical files depending on the provider.        | `["app.yaml", "application.json"]`        |
+| `ImmutableConfigMap variables()`           | Returns the variable bindings used for placeholder interpolation when loading resources.                                               | `{ "env": "dev", "region": "us-east-1" }` |
+| `boolean verboseLogging()`                 | Indicates whether verbose logging should be enabled during resource resolution. Useful for debugging provider and loader behavior.     | `true`                                    |
+| `Placeholder placeholder()`                | Returns the placeholder strategy to use when resolving variable expressions inside resources.                                          | `Placeholder`                             |
+| `static ResourceLocationBuilder builder()` | Returns a new builder for creating a ResourceLocation instance.                                                                        | `ResourceLocation.builder().build()`      |
 
-The following table documents all available methods in the `ConfigReader` API:
+## ResourceLocationBuilder API
 
-| Method                                               | Description                                                           | Example                                                                      |
-| ---------------------------------------------------- |-----------------------------------------------------------------------| ---------------------------------------------------------------------------- |
-| `get(String key, Class<T> type)`                     | Retrieves optional value for key, converted to specified type.        | `reader.get("app.name", String.class)`                                       |
-| `get(String key, TypeOf<T> typeOf)`                  | Retrieves optional value for key, converted to complex/generic type.  | `reader.get("servers", new TypeOf<List<String>>() {})`                       |
-| `get(String key, Class<T> type, T defaultValue)`     | Retrieves value or returns default if missing.                        | `reader.get("timeout", Integer.class, 30)`                                   |
-| `get(String key, TypeOf<T> typeOf, T defaultValue)`  | Retrieves value for key (generic type) or returns default if missing. | `reader.get("servers", new TypeOf<List<String>>() {}, List.of("localhost"))` |
-| `getString(String key)`                              | Retrieves string value.                                               | `reader.getString("app.name")`                                               |
-| `getString(String key, String defaultValue)`         | Retrieves string or returns default.                                  | `reader.getString("app.name", "Default")`                                    |
-| `getInt(String key)`                                 | Retrieves integer value.                                              | `reader.getInt("port")`                                                      |
-| `getInt(String key, int defaultValue)`               | Retrieves integer or returns default.                                 | `reader.getInt("port", 8080)`                                                |
-| `getBoolean(String key)`                             | Retrieves boolean value.                                              | `reader.getBoolean("enabled")`                                               |
-| `getBoolean(String key, boolean defaultValue)`       | Retrieves boolean or returns default.                                 | `reader.getBoolean("enabled", false)`                                        |
-| `getFloat(String key)`                               | Retrieves float value.                                                | `reader.getFloat("piValue")`                                                 |
-| `getFloat(String key, float defaultValue)`           | Retrieves float or returns default.                                   | `reader.getFloat("piValue", 3.14f)`                                          |
-| `getDouble(String key)`                              | Retrieves double value.                                               | `reader.getDouble("piValue")`                                                |
-| `getDouble(String key, double defaultValue)`         | Retrieves double or returns default.                                  | `reader.getDouble("piValue", 3.1415)`                                        |
-| `getStringArray(String key)`                         | Retrieves string array.                                               | `reader.getStringArray("hosts")`                                             |
-| `getStringArray(String key, String[] defaultValue)`  | Retrieves string array or returns default.                            | `reader.getStringArray("hosts", new String[]{"localhost"})`                  |
-| `getStringList(String key)`                          | Retrieves list of strings.                                            | `reader.getStringList("hosts")`                                              |
-| `getStringList(String key, List<String> defaultVal)` | Retrieves list of strings or default.                                 | `reader.getStringList("hosts", List.of("localhost"))`                        |
-| `getList(String key, Class<E> clazz)`                | Retrieves list of values of specified type.                           | `reader.getList("ports", Integer.class)`                                     |
-| `getList(String key, Class<E> clazz, List<E> def)`   | Retrieves list of values or returns default.                          | `reader.getList("ports", Integer.class, List.of(80, 443))`                   |
-| `getMap(String key, Class<V> clazz)`                 | Retrieves map of values of specified type.                            | `reader.getMap("db.settings", String.class)`                                 |
-| `getMap(String key, Class<V> clazz, Map<V> def)`     | Retrieves map of values or returns default.                           | `reader.getMap("db.settings", String.class, Map.of("timeout", "30"))`        |
-| `hasKey(String key)`                                 | Checks if key exists.                                                 | `reader.hasKey("app.name")`                                                  |
-| `getAllConfig()`                                     | Retrieves all configuration as a Map.                                 | `reader.getAllConfig()`                                                      |
-| `getAllConfigAs(Class<T> type)`                      | Converts the entire configuration to specified type.                  | `reader.getAllConfigAs(AppConfig.class)`                                     |
+The following table documents all available methods in the `ResourceLocationBuilder` API:
 
----
+| Method                                                                      | Description                                                                                                                      | Example                                                                  |
+|-----------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------|
+| `ResourceLocationBuilder provider(String provider)`                         | Sets the provider that will be used for resources without an explicit provider prefix. Defaults to "classpath" if not specified. | `.provider("classpath")`                                                 |
+| `ResourceLocationBuilder baseDirectories(String... baseDirectories)`        | Defines the base directories where providers will search for files. Order determines precedence.                                 | `.baseDirectories("", "config")`                                         |
+| `ResourceLocationBuilder addResource(String resourceName)`                  | Adds a single resource name to resolve.                                                                                          | `.addResource("application.properties")`                                 |
+| `ResourceLocationBuilder addResources(String... resources)`                 | Adds multiple resource names for resolution.                                                                                     | `.addResources("app.json", "app.xml")`                                   |
+| `ResourceLocationBuilder addResourceFromList(List<String> resources)`       | Adds a list of resource names. Useful when names come from external collections.                                                 | `.addResourceFromList(List.of("a.yml", "b.yml"))`                        |
+| `ResourceLocationBuilder addVariable(String key, String value)`             | Adds a single variable for placeholder interpolation. Throws InvalidVariablesException for invalid pairs.                        | `.addVariable("profile", "dev")`                                         |
+| `ResourceLocationBuilder addVariables(String... variables)`                 | Adds variables using alternating key/value pairs.                                                                                | `.addVariables("profile", "dev", "region", "us-east-1")`                 |
+| `ResourceLocationBuilder addVariablesFromMap(Map<String,String> variables)` | Adds variables from a map.                                                                                                       | `.addVariablesFromMap(Map.of("env","prod"))`                             |
+| `ResourceLocationBuilder verboseLogging(boolean verboseLogging)`            | Enables or disables detailed logging during resource resolution. Off by default.                                                 | `.verboseLogging(true)`                                                  |
+| `ResourceLocationBuilder placeholders(Placeholder placeholder)`             | Sets the placeholder engine to use. If not specified, a default engine with prefix "${"}, delimiter ":", suffix "}" is applied.  | `.placeholders(Placeholder.builder().prefix("{{").suffix("}}").build())` |
+| `ResourceLocation build()`                                                  | Builds an immutable ResourceLocation. Applies defaults for provider and placeholders if missing.                                 | `.build()`                                                               |
 
-## Exceptions
+## Placeholder API
 
-| Method                                       | Exception                                     | Description                                               |
-| -------------------------------------------- | --------------------------------------------- | --------------------------------------------------------- |
-| `ConfigFactory.load()`                       | `ConfigException`, `IllegalArgumentException` | Thrown if resource location is invalid or loading fails.  |
-| `ConfigReader.getOrThrow(String, Class)`     | `MissingConfigException`                      | Thrown when the requested key does not exist.             |
-| `ConfigReader.getOrThrow(String, TypeOf)`    | `MissingConfigException`                      | Thrown when the requested key does not exist.             |
-| `ConfigReader.getAllConfigAs(Class)`         | `NullPointerException`                        | Thrown if provided class is null.                         |
-| `ConfigReader.get(String, Class)`            | `NullPointerException`, `IllegalArgumentException` | Thrown if key is null/blank or class is null.              |
-| `ConfigReader.get(String, TypeOf)`           | `NullPointerException`, `IllegalArgumentException` | Thrown if key or TypeOf is null/blank.                    |
-| `ConfigReader.getList()` / `getMap()`        | `NullPointerException`, `IllegalArgumentException` | Thrown if key is null/blank or class is null.              |
-| `ConfigReader.hasKey(String)`                | `NullPointerException`, `IllegalArgumentException` | Thrown if key is null or blank.                           |
-| All "required key" getters (without default) | `MissingConfigException`                      | Thrown if key does not exist and no default provided.     |
+The following table documents all available methods in the `Placeholder` API:
+
+| Method                                                                                      | Description                                                                                                                                                                | Example                                                                                |
+|---------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| `Optional<String> replaceIfAllResolvable(String template, PropertySource... extraSources)`  | Resolves all placeholders in the template. Returns an empty Optional if any placeholder cannot be resolved. Uses PropertySource instances plus any extra sources provided. | `replaceIfAllResolvable("Hello ${name}", propertySource);`                             |
+| `Optional<String> replaceIfAllResolvable(String template, Map<String, String> extraValues)` | Convenience overload that wraps the provided map as a temporary PropertySource. Behaves exactly like the other method.                                                     | `replaceIfAllResolvable("URL: ${host:localhost}", Map.of("host","prod.example.com"));` |
+| `static PlaceholderBuilder builder()`                                                       | Creates a new PlaceholderBuilder with default syntax (${, }, :).                                                                                                           | `builder().build();`                                                                   |
+
+## PlaceholderBuilder API
+
+The following table documents all available methods in the `PlaceholderBuilder` API:
+
+| Method                                            | Description                                                                          | Example            |
+|---------------------------------------------------|--------------------------------------------------------------------------------------|--------------------|
+| `PlaceholderBuilder prefix(String prefix)`        | Sets the prefix that marks the beginning of a placeholder expression. Default: "${". | `.prefix("{{")`    |
+| `PlaceholderBuilder suffix(String suffix)`        | Sets the suffix that ends a placeholder expression. Default: "}".                    | `.suffix("}}")`    |
+| `PlaceholderBuilder delimiter(String delimiter)`  | Sets the delimiter between key and default value. Default: ":".                      | `.delimiter(";")`  |
+| `PlaceholderBuilder escapeChar(char escapeChar))` | Defines the escape character to prevent resolution. Default: '\\'.                   | `.escapeChar('!')` |
+| `Placeholder build()`                             | Builds an immutable Placeholder instance using the configured syntax.                | `.build()`         |
+
+## ResourceProvider API
+
+The following table documents all available methods in the `ResourceProvider` API:
+
+| Method                                                        | Description                                                                                                                                                                         | Example                                |
+|---------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------|
+| `ResourceStream resolveResource(ResourceIdentifier resource)` | Resolves a logical resource identifier into a physical, loadable ResourceStream. Implementations define how resources are retrieved (filesystem, classpath, HTTP, in-memory, etc.). | `provider.resolveResource(resource);`  |
+| `default void validateResource(ResourceIdentifier resource)`  | Performs basic validation of the resource identifier. Implementations may override to add stricter validation rules.                                                                | `provider.validateResource(resource);` |
+| `Set<String> keys() (from Strategy<String>)`                  | Returns the unique provider identifiers (e.g., "classpath", "file", "http"). These keys are used by the resolution pipeline.                                                        | `provider.keys()`                      |
+
+## ResourceLoader API
+
+The following table documents all available methods in the `ResourceLoader` API:
+
+| Method                                                   | Description                                                                                                                      | Example                            |
+|----------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|------------------------------------|
+| `Configuration load(ResourceStream resource)`            | Loads and parses configuration data from the given resource. Implementations define how each format is parsed (JSON, TOML, etc.. | `loader.load(stream);`             |
+| `default void validateResource(ResourceStream resource)` | Ensures that the stream and metadata are not null. Implementations may extend with stricter validation.                          | `loader.validateResource(stream);` |
+| `Set<String> keys() (from Strategy<String>)`             | Returns the file extensions supported by the loader (e.g., "json", "properties", "xml").                                         | `loader.keys();`                   |
+
+## Configuration API
+
+The following table documents all available methods in the `Configuration` API:
+
+| Method                                                    | Description                                                   | Example                                                         |
+|-----------------------------------------------------------|---------------------------------------------------------------|-----------------------------------------------------------------|
+| `boolean containsKey(String key)`                         | Checks whether the configuration contains the given key.      | `config.containsKey("app.port");`                               |
+| `<T> Optional<T> get(String key, Class<T> clazz)`         | Retrieves a value and converts it to the specified class.     | `config.get("app.name", String.class);`                         |
+| `<T> Optional<T> get(String key, TypeOf<T> type)`         | Retrieves a value using a generic type (e.g., lists or maps). | `config.get("servers", new TypeOf<List<String>>(){});`          |
+| `<T> T get(String key, Class<T> clazz, T defaultValue)`   | Returns the value or a default when missing.                  | `config.get("app.port", Integer.class, 8080);`                  |
+| `<T> T get(String key, TypeOf<T> type, T defaultValue)`   | Generic-type version of get with default fallback.            | `config.get("tags", new TypeOf<List<String>>() {}, List.of());` |
+| `<T> T getOrThrow(String key, Class<T> clazz)`            | Retrieves a required value, throws if absent.                 | `config.getOrThrow("db.url", String.class);`                    |
+| `<T> T getOrThrow(String key, TypeOf<T> type`             | Required-read version for generic types.                      | `config.getOrThrow("metadata", new TypeOf<>(){});`              |
+| `String getString(String key)`                            | Retrieves a required string.                                  | `config.getString("env.mode");`                                 |
+| `int getInt(String key)`                                  | Retrieves a required integer.                                 | `config.getInt("threads");`                                     |
+| `boolean getBoolean(String key)`                          | Retrieves a required boolean.                                 | `config.getBoolean("debug.enabled");`                           |
+| `double getDouble(String key)`                            | Retrieves a required double.                                  | `config.getDouble("balance.ratio");`                            |
+| `Duration getDuration(String key)`                        | Retrieves a required duration.                                | `config.getDuration("http.timeout");`                           |
+| `String getString(String key, String defaultValue)`       | Retrieves a string or uses default.                           | `config.getString("db.host", "localhost");`                     |
+| `int getInt(String key, int defaultValue)`                | Retrieves an int or uses default.                             | `config.getInt("retries", 3);`                                  |
+| `boolean getBoolean(String key, boolean defaultValue)`    | Retrieves a boolean or uses default.                          | `config.getBoolean("cache.enabled", true);`                     |
+| `double getDouble(String key, double defaultValue)`       | Retrieves a double or uses default.                           | `config.getDouble("limit", 0.5);`                               |
+| `Duration getDuration(String key, Duration defaultValue)` | Retrieves a duration or uses default.                         | `config.getDuration("delay", Duration.ofSeconds(5));`           |
+| `<E> List<E> getList(String key, Class<E> clazz)`         | Returns a list of converted elements.                         | `config.getList("servers", String.class);`                      |
+| `<V> Map<String, V> getMap(String key, Class<V> clazz)`   | Returns a nested map converted to the target type.            | `config.getMap("limits", Integer.class);`                       |
+| `Map<String, Object> getRootAsMap()`                      | Returns the entire configuration as an unmodifiable map.      | `config.getRootAsMap();`                                        |
+| `<T> Optional<T> getRootAs(Type type)`                    | Converts the root into a target type (POJO, map, list, etc.). | `config.getRootAs(AppConfig.class).orElseThrow();`              |
 
 ---
 
