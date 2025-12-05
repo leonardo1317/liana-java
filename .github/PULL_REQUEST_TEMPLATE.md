@@ -1,61 +1,37 @@
 # 📝 Pull Request
 
 ## 📘 Description
-<!-- A clear and concise description of what this PR changes. -->
+<!-- What does this PR do? A clear and concise summary. -->
 
-## 🎯 Motivation & Context
-<!-- Why is this change needed? What problem does it solve? -->
-
----
+## 🎯 Motivation
+<!-- Why is this change needed? Link to an issue if applicable. -->
 
 ## 🔍 Type of Change
 Select one:
+- [ ] Feature
+- [ ] Bug fix
+- [ ] Refactor (no behavior changes)
+- [ ] Documentation
+- [ ] Build / CI
+- [ ] Breaking change
 
-- [ ] ✨ Feature
-- [ ] 🐛 Bug fix
-- [ ] 📚 Documentation
-- [ ] ♻️ Refactor
-- [ ] ⚙️ Build / CI
-- [ ] 🔧 Internal change
-- [ ] 💥 Breaking change
-
----
-
-## 🧩 What Was Changed
-<!-- Summarize the main modifications (files, APIs, behavior, etc.) -->
-
-<details>
-<summary><strong>📚 Documentation Updates</strong></summary>
-
-- [ ] Updated README
-- [ ] Added/Updated API tables
-- [ ] Added examples
-- [ ] Added notes about Java version / parsing engine / Jackson modules
-
-</details>
-
----
+## 🧩 Summary of Changes
+<!-- Highlight key changes (modified APIs, important files, behavior changes). -->
 
 ## 🧪 Tests
-
 - [ ] Added tests
 - [ ] Updated tests
-- [ ] Manual tests performed
+- [ ] Manual testing done
 
-<details>
-<summary><strong>Manual test steps</strong></summary>
-
+If manual testing was needed, steps:
 1.
 2.
 3.
 
-</details>
+## 📦 Dependencies (if any)
+<!-- New or updated libraries -->
 
----
-
-## 📦 Dependencies
-
-- [ ] New dependencies added
-- [ ] Existing dependencies updated
-
-List them if any:
+## ✔️ Checklist
+- [ ] Code builds and tests pass
+- [ ] Documentation updated if needed
+- [ ] Follows project coding style
