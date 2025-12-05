@@ -2,6 +2,7 @@ plugins {
     id 'java-library'
     id 'jacoco'
     id 'checkstyle'
+    id 'maven-publish'
 }
 
 group = 'io.github.liana'
@@ -65,4 +66,26 @@ dependencies {
 test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            groupId = 'io.github.liana'
+            artifactId = 'liana-config'
+            version = project.version
+        }
+    }
+
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/${project.findProperty("github.user")}/${project.findProperty("github.repo")}")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
+    }
 }
