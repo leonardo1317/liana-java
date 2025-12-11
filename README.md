@@ -1,10 +1,6 @@
-![Liana](banner-github-clean.png)
+<img src="banner.png" alt="Liana" width="380">
 
 # Liana Config
-
-&#x20;
-
----
 
 ## Overview
 
@@ -14,8 +10,6 @@ application's needs not the other way around.
 
 Liana abstracts configuration complexity and offers a unified API to load configurations
 from [supported formats](#supported-formats) without forcing the use of heavyweight frameworks.
-
----
 
 ## Philosophy
 
@@ -28,16 +22,12 @@ Liana prioritizes:
 - **Simplicity**: One-time load with cache for fast repeated access.
 - **Clarity**: Supports placeholders, overrides, and variables.
 
----
-
 ## Supported Formats
 
 - **Properties**
 - **YAML**
 - **JSON**
 - **XML**
-
----
 
 ## Key Features
 
@@ -68,13 +58,9 @@ applications:
   prefixing the filename with providerName:. This allows mixing resources from different sources in
   the same configuration load.
 
----
-
 ## Installation
 
 _Not available yet (coming soon)._
-
----
 
 ## Quick Start
 
@@ -123,24 +109,16 @@ Loaded: application.yaml, application-dev.yaml
 Failed: missing-config.yaml (not found)
 ```
 
----
-
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
-
----
 
 ## License
 
 Apache License 2.0
 
----
-
 ## Author
 
 Leonardo R.
-
----
 
 > "Liana: Configuration that adapts to you, not the other way around."
