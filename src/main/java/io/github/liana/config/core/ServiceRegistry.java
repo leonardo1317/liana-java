@@ -2,10 +2,9 @@ package io.github.liana.config.core;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.Map;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.ServiceLoader;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 
@@ -24,7 +23,7 @@ import java.util.function.Function;
  * <p>Keys (type aliases) are converted to lowercase to allow case-insensitive lookups.
  * All created instances are cached to avoid redundant object creation.
  *
- * <p>Thread-safety is guaranteed through the use of a {@link ConcurrentHashMap}.
+ * <p>Thread-safety is guaranteed through the use of a {@link LoadingCache}.
  *
  * @param <T> the type of service loaded by {@link ServiceLoader}
  * @param <R> the type of object produced from the service
@@ -32,7 +31,7 @@ import java.util.function.Function;
 class ServiceRegistry<T, R> {
 
   private final ServiceLoader<T> loader;
-  private final Map<String, R> cache = new ConcurrentHashMap<>();
+  private final LoadingCache<String, R> cache = new LoadingCache<>();
   private final BiPredicate<T, String> filter;
   private final Function<T, R> function;
 
@@ -68,7 +67,8 @@ class ServiceRegistry<T, R> {
    */
   public Optional<R> get(String type) {
     requireNonNull(type, "type must not be null");
-    return Optional.ofNullable(cache.computeIfAbsent(type.toLowerCase(), this::create));
+    var normalizedType = type.toLowerCase(Locale.ROOT);
+    return Optional.ofNullable(cache.getOrCompute(normalizedType, () -> create(normalizedType)));
   }
 
   private R create(String type) {
