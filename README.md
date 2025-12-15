@@ -64,7 +64,7 @@ _Not available yet (coming soon)._
 
 ## Documentation
 
-- **Full documentation**: [Liana documentation](https://leonardo1317.github.io/liana-java)
+- **Full documentation**: [Liana documentation](https://leonardo1317.github.io/liana-config)
 
 ## Contributing
 
