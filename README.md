@@ -1,111 +1,77 @@
-<img src="assets/banner.png" alt="Liana" width="380">
+<img src="docs/latest/assets/images/banner.png" alt="Liana" width="380">
 
 # Liana Config
 
-## Overview
+**Liana** is a lightweight, framework-agnostic Java configuration library that adapts to your
+application — not the other way around.
 
-**Liana** is a lightweight, framework-agnostic Java configuration library designed for simplicity and flexibility. Inspired by the liana plant that adapts to any structure, Liana adapts to your application's needs—not the other way around.
+It provides a simple and predictable way to load, merge, and access configuration from multiple
+sources and formats, without coupling your code to a specific framework or runtime.
 
-Liana abstracts configuration complexity and provides a unified API to load configuration data from **supported formats by default**, while allowing you to **extend it with custom providers and loaders** to handle other formats or sources. This means you can use it out-of-the-box with common formats or adapt it to your own specific requirements.
+## Why Liana?
 
-## Supported Formats (Default)
+Most configuration libraries are tightly coupled to frameworks or impose rigid conventions.
 
-By default, Liana supports the following formats:
+Liana focuses on:
 
-- **Properties**
-- **YAML**
-- **JSON**
-- **XML**
+- **Flexibility** over magic
+- **Explicit behavior** over hidden defaults
+- **Extensibility** without complexity
 
-> You can extend Liana with your own providers and loaders to support additional formats or custom sources.
+Use Liana when you want full control over how configuration is loaded, merged, and resolved — while
+keeping your code clean and type-safe.
 
 ## Key Features
 
-Liana provides essential configuration capabilities designed for flexibility and simplicity in Java applications:
+- **Multi-format support**
+  Load configuration from Properties, YAML, JSON, and XML.
+- **Ordered overrides**
+  Later-loaded resources override earlier ones, ideal for environment-based layering.
+- **Deep placeholder interpolation**
+  Resolve ${var} and ${var:default} across nested configuration structures.
+- **Type-safe access**
+  Retrieve values as primitives, collections, maps, or map directly to POJOs.
+- **Thread-safe and immutable**
+  Configuration is immutable after loading and safe to share across threads.
+- **Extensible by design**
+  Add custom providers and loaders to support new formats or sources.
 
-- **Multi-format support**: Load and merge multiple configuration files in default supported formats or extend with custom loaders.
-- **Ordered overrides**: Later-loaded files override earlier ones for environment-specific layering.
-- **Custom placeholder resolution**: Replace placeholders (`${profile}` or `${profile:default}`) dynamically using variable maps.
-- **Deep interpolation**: Automatically interpolates placeholder variables across all textual nodes in nested structures.
-- **Variable injection**: Inject variables via fluent API or programmatically.
-- **Type-safe access**: Retrieve config as `String`, `int`, `boolean`, lists, maps, arrays, or POJOs.
-- **POJO and generic mapping**: Deserialize config sections into POJOs or generic structures using `TypeOf<T>`. POJO fields should be private with public getters and setters.
-- **Complete config snapshot**: Access the full config tree as an unmodifiable `Map<String, Object>` or a full POJO.
-- **Thread-safe and immutable**: Config data is immutable after loading.
-- **Optional verbose logging**: Detailed logs for resource loading and resolution.
-- **Strict file validation**: Validates resource names against security and compatibility rules before loading.
-- **Custom Providers and Loaders**: Register your own resource loaders and providers to extend Liana’s functionality.
-- **Per-file provider specification**: Assign a specific provider for individual resource files by prefixing the filename with `providerName:`. This allows mixing resources from different sources in the same configuration load.
+## Quick Start
 
-## Architecture & Flow
+Liana works out of the box with sensible defaults.
 
-Liana uses a pipeline-based architecture focused on *resolution*, *preparation* and *merging* of configuration data. This keeps the design simple, predictable, and extensible.
+```java
+ConfigurationManager manager = ConfigurationManager.builder().build();
+Configuration config = manager.load(ResourceLocation.builder().build());
 
-Below are two diagrams:
+String appName = config.getString("app.name", "DefaultApp");
+int port = config.getInt("server.port", 8080);
+```
 
-1. **Configuration Resolution Flow** – steps involved during a `load()` operation
-2. **Abstract Architecture** – a conceptual overview of the main subsystems
+### Default behavior
 
-### Configuration Resolution Flow
-![Configuration Resolution Flow](docs/diagrams/configuration-flow.png)
+By default, Liana:
 
-### Configuration Library Architecture
-![Architecture Overview](docs/diagrams/architecture.png)
+- Uses the **classpath** as the configuration source
+- Looks for files named `application` in supported formats
+- Applies profile-based overrides using `application-${profile}`
+- Resolves `${profile}` from the `LIANA_PROFILE` environment variable
+- Falls back to the `default` profile when none is provided
 
 ## Installation
 
 _Not available yet (coming soon)._
 
-## Quick Start
+## Documentation
 
-Use **defaults** to get started immediately.
-
-**Liana assumes a file named `application` exists in your classpath (e.g., `application.yaml`).**
-
-```java
-// Quick start with defaults
-ResourceLocation location = ResourceLocation.builder().build();
-
-ConfigurationManager manager = ConfigurationManager.builder().build();
-Configuration configuration = manager.load(location);
-
-// Access with default fallback
-String appName = configuration.getString("app.name", "DefaultApp");
-int port = configuration.getInt("server.port", 8080);
-```
-
-Defaults applied if not specified:
-
-- Provider: **classpath**
-- Profile variable: **profile**
-- Default profile: **default**
-- Profile environment variable: **LIANA_PROFILE**
-- Base resource name: **application**
-- Base resource pattern: **application-${profile}**
-
-This means Liana will search the classpath for:
-
-1. `application` (any supported format).
-2. `application-${profile}` with `${profile}` resolved from `LIANA_PROFILE`.
-
-If LIANA_PROFILE is not set, the default profile `default` is used.
-Placeholders support ${key} and ${key:default} syntax and are interpolated automatically.
-
-## Full API Reference
-
-See [API_REFERENCE.md](API_REFERENCE.md)
-
-## Logging Example
-
-```plaintext
-Configuration load completed: loaded=2, failed=1 (total=3)
-Loaded: application.yaml, application-dev.yaml
-Failed: missing-config.yaml (not found)
-```
+- **Full documentation**: `/docs/latest`
+- **API Reference**: [API_REFERENCE.md](API_REFERENCE.md)
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md)
+Contributions, issues, and ideas are welcome.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 

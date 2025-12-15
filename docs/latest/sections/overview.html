@@ -1,0 +1,90 @@
+<section class="doc-section">
+
+  <h1>Liana Configuration</h1>
+
+  <p class="lead">
+    <strong>Liana</strong> is a lightweight, framework-agnostic Java configuration
+    library designed for clarity, predictability, and extensibility.
+  </p>
+
+  <p>
+    Modern Java applications often need to load configuration from multiple
+    sources, formats, and environments. Existing solutions tend to be either
+    tightly coupled to a framework or overly complex for simple use cases.
+  </p>
+
+  <p>
+    Liana provides a <strong>deterministic configuration resolution pipeline</strong>
+    with sensible defaults, while allowing you to extend every step when needed.
+    It adapts to your application — not the other way around.
+  </p>
+
+  <h2>Why Liana?</h2>
+
+  <ul>
+    <li>
+      <strong>Framework-agnostic:</strong> works in plain Java, microservices,
+      CLI tools, and any JVM-based environment.
+    </li>
+    <li>
+      <strong>Multi-format support:</strong> load and merge configuration from
+      properties, YAML, JSON, and XML out of the box.
+    </li>
+    <li>
+      <strong>Predictable overrides:</strong> later resources override earlier
+      ones, making environment layering explicit and safe.
+    </li>
+    <li>
+      <strong>Deep placeholder interpolation:</strong> resolve variables across
+      nested structures with support for defaults.
+    </li>
+    <li>
+      <strong>Type-safe access:</strong> read values as primitives, collections,
+      maps, or strongly-typed POJOs.
+    </li>
+    <li>
+      <strong>Immutable and thread-safe:</strong> configuration is read-only
+      after loading.
+    </li>
+  </ul>
+
+  <h2>Designed for Extension</h2>
+
+  <p>
+    Liana is built around a small set of well-defined abstractions:
+    <em>providers</em>, <em>loaders</em>, and a resolution pipeline.
+    This makes it easy to introduce custom configuration sources
+    (filesystem, HTTP, secrets managers) or new file formats without
+    changing the core.
+  </p>
+
+  <p>
+    You can mix multiple providers in the same configuration load and even
+    assign a specific provider per resource when needed.
+  </p>
+
+  <h2>What Liana Is — and Is Not</h2>
+
+  <ul>
+    <li>
+      <strong>✔ Liana is</strong> a focused configuration library with explicit
+      behavior and minimal magic.
+    </li>
+    <li>
+      <strong>✘ Liana is not</strong> a full application framework or a
+      dependency injection container.
+    </li>
+    <li>
+      <strong>✔ Liana complements</strong> frameworks like Spring, Micronaut,
+      or Quarkus when you want more control over configuration resolution.
+    </li>
+  </ul>
+
+  <p class="next-step">
+    Ready to get started? Continue with the
+    <a href="#quick-start">Quick Start</a>
+    to load your first configuration in minutes.
+  </p>
+
+</section>
+

@@ -1,0 +1,109 @@
+<section class="doc-section">
+  <h1>POJO Mapping</h1>
+
+  <p class="lead">
+    Liana allows you to map configuration sections directly into Java records,
+    enabling concise, immutable, and type-safe access to structured configuration data.
+  </p>
+
+  <p>
+    Records are a natural fit for configuration objects: they are immutable,
+    expressive, and reduce boilerplate while preserving clarity.
+  </p>
+
+  <h2>Basic Record Mapping</h2>
+
+  <p>
+    You can retrieve a configuration subtree and convert it into a Java record
+    by providing the target record type.
+  </p>
+
+  <pre><code class="language-java">
+public record AppConfig(
+  String name,
+  int port
+) {}
+  </code></pre>
+
+  <p>
+    Given the following configuration:
+  </p>
+
+  <pre><code class="language-yaml">
+app:
+  name: Liana
+  port: 8080
+  </code></pre>
+
+  <p>
+    You can load it as a record like this:
+  </p>
+
+  <pre><code class="language-java">
+Configuration configuration = manager.load(location);
+
+AppConfig config = configuration.get(
+  "app",
+  AppConfig.class,
+  new AppConfig("DefaultApp", 8080)
+);
+  </code></pre>
+
+  <h2>Mapping Lists of Records</h2>
+
+  <p>
+    Liana supports mapping collections of records using the <code>TypeOf</code>
+    helper for generic type preservation.
+  </p>
+
+  <pre><code class="language-java">
+public record ServerConfig(
+  String host,
+  int port
+) {}
+  </code></pre>
+
+  <pre><code class="language-yaml">
+servers:
+  - host: localhost
+    port: 8080
+  - host: example.com
+    port: 9090
+  </code></pre>
+
+  <pre><code class="language-java">
+List&lt;ServerConfig&gt; servers = configuration.get(
+  "servers",
+  new TypeOf&lt;List&lt;ServerConfig&gt;&gt;() {},
+  List.of()
+);
+  </code></pre>
+
+  <h2>Optional Record Access</h2>
+
+  <p>
+    When a configuration section may not exist, retrieve it safely using
+    <code>Optional</code>.
+  </p>
+
+  <pre><code class="language-java">
+Optional&lt;AppConfig&gt; optionalConfig =
+  configuration.get("app", AppConfig.class);
+  </code></pre>
+
+  <h2>Record Design Guidelines</h2>
+
+  <ul>
+    <li>Records should represent immutable configuration views.</li>
+    <li>Component names must match configuration keys.</li>
+    <li>Use default values via fallback parameters when appropriate.</li>
+    <li>Avoid behavior-heavy logic inside configuration records.</li>
+  </ul>
+
+  <p class="next-step">
+    Next, explore advanced configuration scenarios such as custom providers,
+    loaders, and placeholder strategies in
+    <a href="#advanced" data-section="advanced">Advanced Usage</a>.
+  </p>
+</section>
+

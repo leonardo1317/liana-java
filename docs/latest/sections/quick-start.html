@@ -1,0 +1,98 @@
+<section class="doc-section">
+
+  <h1>Quick Start</h1>
+
+  <p class="lead">
+    Get started with Liana using the default configuration setup.
+    No custom providers, no extra configuration.
+  </p>
+
+  <h2>1. Add Liana to your project</h2>
+
+  <p>
+    Liana is not yet published to Maven Central.
+    Installation instructions will be available soon.
+  </p>
+
+  <h2>2. Create a configuration file</h2>
+
+  <p>
+    By default, Liana looks for a file named <code>application</code>
+    in the classpath, using any supported format.
+  </p>
+
+  <p><strong>Example: <code>application.yaml</code></strong></p>
+
+  <pre><code class="language-yaml">app:
+  name: Liana
+server:
+  port: 8080
+</code></pre>
+
+  <h2>3. Load the configuration</h2>
+
+  <p>
+    Use the default <code>ConfigurationManager</code> and
+    <code>ResourceLocation</code> to load configuration data.
+  </p>
+
+  <pre><code class="language-java">ResourceLocation location = ResourceLocation.builder().build();
+
+ConfigurationManager manager = ConfigurationManager.builder().build();
+
+Configuration config = manager.load(location);
+</code></pre>
+
+  <h2>4. Read values</h2>
+
+  <p>
+    Access configuration values using type-safe getters.
+    You can always provide a default value.
+  </p>
+
+  <pre><code class="language-java">String appName = config.getString("app.name", "DefaultApp");
+
+int port = config.getInt("server.port", 8080);
+</code></pre>
+
+  <h2>How defaults work</h2>
+
+  <p>
+    Without any customization, Liana applies the following defaults:
+  </p>
+
+  <ul>
+    <li><strong>Provider:</strong> <code>classpath</code></li>
+    <li><strong>Base resource name:</strong> <code>application</code></li>
+    <li><strong>Profile variable:</strong> <code>profile</code></li>
+    <li><strong>Default profile:</strong> <code>default</code></li>
+    <li>
+      <strong>Profile environment variable:</strong>
+      <code>LIANA_PROFILE</code>
+    </li>
+  </ul>
+
+  <p>
+    This means Liana will automatically try to load:
+  </p>
+
+  <pre><code>application.(properties|yaml|json|xml)
+application-${profile}.(properties|yaml|json|xml)
+</code></pre>
+
+  <p>
+    If <code>LIANA_PROFILE</code> is not set, the profile
+    <code>default</code> is used.
+  </p>
+
+
+  <p class="next-step">
+    Continue with
+    <a href="#architecture">Architecture</a>
+    to understand how configuration is resolved,
+    or jump to
+    <a href="#advanced">Advanced Usage</a>
+    for custom providers and loaders.
+  </p>
+
+</section>

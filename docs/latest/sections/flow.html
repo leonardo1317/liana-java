@@ -1,0 +1,150 @@
+<section class="doc-section">
+
+  <h1>Resolution Flow</h1>
+
+  <p class="lead">
+    This page walks through what happens internally when Liana loads
+    configuration data, step by step.
+  </p>
+
+  <p>
+    The resolution flow is deterministic: given the same inputs,
+    Liana will always produce the same configuration result.
+  </p>
+
+  <h2>Example scenario</h2>
+
+  <p>
+    Assume the following setup:
+  </p>
+
+  <ul>
+    <li>Configuration files in the classpath</li>
+    <li><code>LIANA_PROFILE=dev</code></li>
+    <li>Supported formats enabled by default</li>
+  </ul>
+
+  <p>
+    Available resources:
+  </p>
+
+  <pre><code>application.yaml
+application-dev.yaml
+</code></pre>
+
+    <img class="diagram"
+       src="assets/images/configuration-flow.png"
+       alt="Configuration resolution flow">
+
+  <h2>Step-by-step resolution</h2>
+
+  <ol>
+    <li>
+      <strong>Build the resource location</strong><br />
+      A <code>ResourceLocation</code> is created using defaults or
+      explicit configuration.
+    </li>
+
+    <li>
+      <strong>Resolve variables</strong><br />
+      Variables such as <code>${profile}</code> are resolved from:
+      environment variables, provided values, or defaults.
+    </li>
+
+    <li>
+      <strong>Generate logical resource names</strong><br />
+      Liana generates logical names:
+      <ul>
+        <li><code>application</code></li>
+        <li><code>application-dev</code></li>
+      </ul>
+    </li>
+
+    <li>
+      <strong>Provider resolution</strong><br />
+      Each logical name is passed to the active
+      <em>ResourceProvider</em> (classpath by default),
+      which resolves matching physical files.
+    </li>
+
+    <li>
+      <strong>Loader selection</strong><br />
+      Based on file extension, a matching
+      <em>ResourceLoader</em> is selected
+      (YAML, properties, JSON, or XML).
+    </li>
+
+    <li>
+      <strong>Parse configuration</strong><br />
+      Each file is parsed into a structured configuration tree.
+    </li>
+
+    <li>
+      <strong>Merge results</strong><br />
+      Trees are merged in order:
+      <ul>
+        <li><code>application.yaml</code></li>
+        <li><code>application-dev.yaml</code></li>
+      </ul>
+      Later values override earlier ones.
+    </li>
+
+    <li>
+      <strong>Interpolate placeholders</strong><br />
+      All placeholders are resolved across the full configuration tree,
+      including nested objects and lists.
+    </li>
+
+    <li>
+      <strong>Freeze configuration</strong><br />
+      The final configuration becomes immutable and thread-safe.
+    </li>
+  </ol>
+
+  <h2>Resulting behavior</h2>
+
+  <p>
+    Given the following configuration:
+  </p>
+
+  <pre><code># application.yaml
+server:
+  port: 8080
+
+# application-dev.yaml
+server:
+  port: 9090
+</code></pre>
+
+  <p>
+    The final resolved value will be:
+  </p>
+
+  <pre><code>server.port = 9090
+</code></pre>
+
+  <h2>Error handling</h2>
+
+  <p>
+    Liana validates each step of the resolution process.
+    Invalid resource names, unsupported formats, or unresolved
+    placeholders can be detected early.
+  </p>
+
+  <p>
+    When verbose logging is enabled, Liana reports:
+  </p>
+
+  <ul>
+    <li>Which resources were loaded</li>
+    <li>Which resources were skipped or missing</li>
+    <li>Which providers and loaders were used</li>
+  </ul>
+
+  <p class="next-step">
+    Continue with
+    <a href="#advanced">Advanced Usage</a>
+    to customize providers, loaders, and resolution behavior.
+  </p>
+
+</section>

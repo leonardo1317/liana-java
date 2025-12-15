@@ -1,0 +1,166 @@
+<section class="doc-section">
+
+  <h1>Architecture</h1>
+
+  <p class="lead">
+    Liana is built around a simple, deterministic pipeline that resolves,
+    loads, and merges configuration data in a predictable way.
+  </p>
+
+  <p>
+    Instead of hiding behavior behind framework conventions,
+    Liana makes each step of the configuration process explicit and extensible.
+  </p>
+
+  <h2>High-level design</h2>
+
+  <p>
+    At a high level, Liana is composed of three main concepts:
+  </p>
+
+  <ul>
+    <li>
+      <strong>Resource Providers</strong> – locate and open configuration
+      resources (classpath, filesystem, HTTP, etc.).
+    </li>
+    <li>
+      <strong>Resource Loaders</strong> – parse resources into an internal
+      configuration model (YAML, JSON, properties, XML).
+    </li>
+    <li>
+      <strong>Resolution Pipeline</strong> – coordinates ordering, validation,
+      placeholder resolution, and merging.
+    </li>
+  </ul>
+
+    <img class="diagram"
+       src="assets/images/architecture.png"
+       alt="Liana configuration architecture">
+
+  <p>
+    Each component has a single responsibility and communicates through
+    well-defined interfaces.
+  </p>
+
+  <h2>Configuration resolution pipeline</h2>
+
+  <p>
+    When you call <code>ConfigurationManager.load()</code>,
+    Liana executes the following steps:
+  </p>
+
+  <ol>
+    <li>
+      <strong>Resource identification</strong><br />
+      Logical resource names are created based on the provided
+      <code>ResourceLocation</code> and resolved variables
+      (for example, <code>${profile}</code>).
+    </li>
+    <li>
+      <strong>Provider resolution</strong><br />
+      Each logical resource is delegated to a <em>ResourceProvider</em>,
+      which resolves it into one or more physical resources.
+    </li>
+    <li>
+      <strong>Validation</strong><br />
+      Providers and loaders validate resource names, extensions,
+      and metadata before loading.
+    </li>
+    <li>
+      <strong>Loading</strong><br />
+      A matching <em>ResourceLoader</em> parses each resource into a
+      configuration tree.
+    </li>
+    <li>
+      <strong>Merging</strong><br />
+      Configuration trees are merged in order.
+      Later resources override earlier ones.
+    </li>
+    <li>
+      <strong>Interpolation</strong><br />
+      Placeholders are resolved across the full configuration tree,
+      including nested structures.
+    </li>
+    <li>
+      <strong>Immutability</strong><br />
+      The final configuration is frozen and exposed as a
+      thread-safe, read-only object.
+    </li>
+  </ol>
+
+  <h2>Providers</h2>
+
+  <p>
+    Providers are responsible for locating configuration resources.
+    They do not parse content — they only resolve resource identifiers
+    into readable streams.
+  </p>
+
+  <p>
+    Liana includes a default <code>classpath</code> provider,
+    but you can register custom providers to support:
+  </p>
+
+  <ul>
+    <li>Filesystem paths</li>
+    <li>Remote HTTP endpoints</li>
+    <li>Secrets managers</li>
+    <li>In-memory or generated configuration</li>
+  </ul>
+
+  <p>
+    Providers can be selected globally or per resource
+    using a <code>providerName:resource</code> prefix.
+  </p>
+
+  <h2>Loaders</h2>
+
+  <p>
+    Loaders transform raw resources into structured configuration data.
+    Each loader declares which file extensions it supports.
+  </p>
+
+  <p>
+    This design allows Liana to support multiple formats simultaneously
+    without coupling providers to formats.
+  </p>
+
+  <h2>Ordering and overrides</h2>
+
+  <p>
+    Configuration precedence in Liana is explicit and deterministic:
+  </p>
+
+  <ul>
+    <li>Resources are processed in the order they are declared</li>
+    <li>Later resources override earlier ones</li>
+    <li>No implicit environment magic or hidden priority rules</li>
+  </ul>
+
+  <p>
+    This makes configuration behavior easy to reason about,
+    especially in multi-environment setups.
+  </p>
+
+  <h2>Why this architecture?</h2>
+
+  <p>
+    Liana’s architecture favors:
+  </p>
+
+  <ul>
+    <li>Predictability over convenience magic</li>
+    <li>Composition over inheritance</li>
+    <li>Explicit configuration over convention-heavy behavior</li>
+  </ul>
+
+  <p class="next-step">
+    Next, see
+    <a href="#flow">Resolution Flow</a>
+    for a step-by-step walkthrough,
+    or continue to
+    <a href="#advanced">Advanced Usage</a>
+    to extend Liana with custom providers and loaders.
+  </p>
+
+</section>
