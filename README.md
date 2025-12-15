@@ -64,8 +64,7 @@ _Not available yet (coming soon)._
 
 ## Documentation
 
-- **Full documentation**: `/docs/latest`
-- **API Reference**: [API_REFERENCE.md](API_REFERENCE.md)
+- **Full documentation**: [Liana documentation](https://leonardo1317.github.io/liana-java)
 
 ## Contributing
 
