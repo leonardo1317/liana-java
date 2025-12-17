@@ -107,3 +107,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./gradlew publish -x test
+
+  # ===========================
+  # 4) Deploy — GitHub Pages
+  # ===========================
+  deploy-pages:
+    name: Deploy Documentation to GitHub Pages
+    needs: ci
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v6
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/latest
+          publish_branch: gh-pages
