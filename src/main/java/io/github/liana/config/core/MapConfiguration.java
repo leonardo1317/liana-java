@@ -26,7 +26,7 @@ public class MapConfiguration extends AbstractConfiguration {
    * @param nestedMap the map containing configuration properties; must not be {@code null}
    * @throws NullPointerException if {@code nestedMap} is {@code null}
    */
-  protected MapConfiguration(Map<String, Object> nestedMap) {
+  public MapConfiguration(Map<String, Object> nestedMap) {
     super(new JacksonValueResolver(nestedMap));
   }
 }

@@ -1,0 +1,212 @@
+<section class="doc-section">
+
+  <h1>Advanced Usage</h1>
+
+  <p class="lead">
+    This section covers advanced configuration scenarios and extension points.
+    It assumes you are already familiar with Liana’s core concepts and default behavior.
+  </p>
+
+  <h2>Configuration loading</h2>
+
+  <p>
+    Resource providers and loaders are independent strategies. A provider resolves
+    the resource, while a loader interprets its content. This separation allows
+    flexible composition without tight coupling.
+  </p>
+
+  <pre><code class="language-java">ConfigurationManager manager = ConfigurationManager.builder()
+  .addProvider(new CustomResourceProvider())
+  .addLoader(new CustomResourceLoader())
+  .build();
+
+Configuration config = manager.load(location);
+</code></pre>
+
+  <p>
+    Resolution follows a deterministic process:
+  </p>
+
+  <ul>
+    <li>The appropriate provider is selected based on its keys</li>
+    <li>The resource is resolved into a <code>ResourceStream</code></li>
+    <li>The matching loader parses the resource into a <code>Configuration</code></li>
+  </ul>
+
+  <h2>Custom resource providers</h2>
+
+  <p>
+    A <code>ResourceProvider</code> is responsible for resolving a logical resource
+    into a readable <code>ResourceStream</code>. Liana ships with default providers,
+    but custom implementations can be registered to support additional sources.
+  </p>
+
+  <p>
+    Providers are identified by one or more keys. These keys determine when a
+    provider is selected during resource resolution.
+  </p>
+
+  <pre><code class="language-java">public final class CustomResourceProvider implements ResourceProvider {
+
+  @Override
+  public Set<String> getKeys() {
+    return Set.of("file");
+  }
+
+  @Override
+  public ResourceStream resolveResource(ResourceIdentifier resource) {
+    return ResourceStream.from(
+        resource.resourceName(),
+        /* input stream backed by the resolved resource */
+    );
+  }
+}
+</code></pre>
+
+  <p>
+    Custom providers enable integration with databases, secret managers,
+    remote services, or any non-file-based configuration source.
+  </p>
+
+  <h2>Custom resource loaders</h2>
+
+  <p>
+    A <code>ResourceLoader</code> transforms a resolved <code>ResourceStream</code>
+    into a structured <code>Configuration</code>. Loaders are selected by matching
+    their keys with the resource file extension.
+  </p>
+
+  <p>
+    Implementations are responsible for parsing the resource content and producing
+    structured data compatible with <code>Configuration.from(...)</code>.
+  </p>
+
+  <pre><code class="language-java">public final class CustomResourceLoader implements ResourceLoader {
+
+  @Override
+  public Set<String> getKeys() {
+    return Set.of("yaml", "yml");
+  }
+
+  @Override
+  public Configuration load(ResourceStream resource) {
+    return Configuration.from(
+        /* structured data parsed from the resource stream */
+    );
+  }
+}
+</code></pre>
+
+  <p>
+    Custom loaders are useful when working with non-standard formats or when
+    configuration must be derived from domain-specific representations.
+  </p>
+
+  <h2>Resource resolution</h2>
+
+  <p>
+    Liana exposes <code>ResourceLocation</code>, an immutable descriptor that defines how and where
+    configuration resources should be resolved.
+  </p>
+
+  <p>
+    A resource location combines provider selection, base directories, resource names,
+    variable bindings, placeholder configuration, and logging behavior into a single declarative
+    object.
+  </p>
+
+  <pre><code class="language-java">ResourceLocation location = ResourceLocation.builder()
+    .provider("classpath")
+    .baseDirectories("config")
+    .addResources(
+        "application-${profile}.yaml",
+        "application-${profile:default}.yaml",
+        "file:application.yaml"
+    )
+    .addVariables(
+        "profile", "dev"
+    )
+    .verboseLogging(true)
+    .placeholders(placeholder)
+    .build();
+</code></pre>
+
+  <p>In this example:</p>
+
+  <ul>
+    <li>A global provider is defined for resources without an explicit prefix</li>
+    <li>Individual resources may still override the provider explicitly</li>
+    <li>Variables are bound for placeholder interpolation</li>
+    <li>A custom placeholder strategy is applied consistently to all resources</li>
+    <li>Relative resource names may be searched within the specified <code>baseDirectories</code>,
+      depending on how the provider is implemented
+    </li>
+    <li>Verbose logging is enabled, showing detailed output of the configuration loading process
+    </li>
+  </ul>
+
+  <p>
+    Placeholder resolution follows a clear precedence order:
+  </p>
+
+  <ul>
+    <li>Variables defined in the <code>ResourceLocation</code> via <code>.addVariables(...)</code>
+    </li>
+    <li>Environment variables (for example, <code>export profile=production</code>) override the
+      above
+    </li>
+    <li>Default values specified in the placeholder (for example, <code>${profile:default}</code>)
+      are used if neither of the above exists
+    </li>
+  </ul>
+
+  <p>
+    This precedence applies both to the <strong>resource names</strong> and the
+    <strong>content</strong> within the resources. It ensures predictable and flexible
+    configuration resolution across different environments and deployment scenarios.
+  </p>
+
+  <h2>Custom placeholder</h2>
+
+  <p>
+    Placeholder resolution is fully configurable through the
+    <code>Placeholder</code> abstraction. Builders allow fine-grained control
+    over syntax and escaping rules.
+  </p>
+
+  <pre><code class="language-java">Placeholder placeholder = Placeholder.builder()
+    .prefix("${")
+    .suffix("}")
+    .delimiter(":")
+    .escapeChar('\\')
+    .build();
+  </code></pre>
+
+  <p>
+    Placeholders are resolved during loading and may reference variables,
+    environment values, or previously resolved configuration entries.
+  </p>
+
+  <h2>Immutability and thread safety</h2>
+
+  <p>
+    Once a <code>ConfigurationManager</code> is built, it is immutable and safe to reuse across
+    threads.
+    Custom providers and loaders should document their own thread-safety guarantees.
+  </p>
+
+  <h2>When to use advanced features</h2>
+
+  <ul>
+    <li>Multiple or non-standard configuration sources</li>
+    <li>Custom configuration formats</li>
+    <li>Environment-specific resolution logic</li>
+    <li>Library or framework integration</li>
+  </ul>
+
+  <p class="next-step">
+    Next steps?
+    Jump to <a href="#pojo">POJO Mapping</a>.
+  </p>
+
+</section>

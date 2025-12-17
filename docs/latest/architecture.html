@@ -33,7 +33,7 @@
     </li>
   </ul>
 
-    <img class="diagram"
+  <img class="diagram"
        src="assets/images/architecture.png"
        alt="Liana configuration architecture">
 
@@ -51,38 +51,38 @@
 
   <ol>
     <li>
-      <strong>Resource identification</strong><br />
+      <strong>Resource identification</strong><br/>
       Logical resource names are created based on the provided
       <code>ResourceLocation</code> and resolved variables
       (for example, <code>${profile}</code>).
     </li>
     <li>
-      <strong>Provider resolution</strong><br />
+      <strong>Provider resolution</strong><br/>
       Each logical resource is delegated to a <em>ResourceProvider</em>,
       which resolves it into one or more physical resources.
     </li>
     <li>
-      <strong>Validation</strong><br />
+      <strong>Validation</strong><br/>
       Providers and loaders validate resource names, extensions,
       and metadata before loading.
     </li>
     <li>
-      <strong>Loading</strong><br />
+      <strong>Loading</strong><br/>
       A matching <em>ResourceLoader</em> parses each resource into a
       configuration tree.
     </li>
     <li>
-      <strong>Merging</strong><br />
+      <strong>Merging</strong><br/>
       Configuration trees are merged in order.
       Later resources override earlier ones.
     </li>
     <li>
-      <strong>Interpolation</strong><br />
+      <strong>Interpolation</strong><br/>
       Placeholders are resolved across the full configuration tree,
       including nested structures.
     </li>
     <li>
-      <strong>Immutability</strong><br />
+      <strong>Immutability</strong><br/>
       The final configuration is frozen and exposed as a
       thread-safe, read-only object.
     </li>
@@ -155,12 +155,8 @@
   </ul>
 
   <p class="next-step">
-    Next, see
-    <a href="#flow">Resolution Flow</a>
-    for a step-by-step walkthrough,
-    or continue to
-    <a href="#advanced">Advanced Usage</a>
-    to extend Liana with custom providers and loaders.
+    Next steps?
+    See <a href="#flow">Resolution Flow</a>, or jump to <a href="#advanced">Advanced Usage</a>.
   </p>
 
 </section>

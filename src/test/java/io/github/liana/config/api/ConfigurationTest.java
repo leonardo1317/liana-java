@@ -13,6 +13,8 @@ import static org.mockito.Mockito.when;
 import io.github.liana.config.core.exception.MissingConfigException;
 import io.github.liana.config.core.type.TypeOf;
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -228,5 +230,24 @@ class ConfigurationTest {
         assertThrows(MissingConfigException.class, () -> config.getOrThrow("error", String.class));
 
     assertTrue(ex.getMessage().contains("Missing required config: error"));
+  }
+
+  @Test
+  @DisplayName("should create Configuration from a valid map and retrieve values")
+  void shouldCreateConfigurationFromMap() {
+    Map<String, Object> nestedMap = Map.of(
+        "app", Map.of("name", "Liana", "retries", 3)
+    );
+
+    Configuration config = Configuration.from(nestedMap);
+
+    assertEquals("Liana", config.getString("app.name"));
+    assertEquals(3, config.getInt("app.retries"));
+  }
+
+  @Test
+  @DisplayName("should throw NullPointerException when null map is passed")
+  void shouldThrowExceptionWhenMapIsNull() {
+    assertThrows(NullPointerException.class, () -> Configuration.from(null));
   }
 }

@@ -28,11 +28,11 @@
     Available resources:
   </p>
 
-  <pre><code>application.yaml
+  <pre><code class="language-bash">application.yaml
 application-dev.yaml
 </code></pre>
 
-    <img class="diagram"
+  <img class="diagram"
        src="assets/images/configuration-flow.png"
        alt="Configuration resolution flow">
 
@@ -40,19 +40,19 @@ application-dev.yaml
 
   <ol>
     <li>
-      <strong>Build the resource location</strong><br />
+      <strong>Build the resource location</strong><br/>
       A <code>ResourceLocation</code> is created using defaults or
       explicit configuration.
     </li>
 
     <li>
-      <strong>Resolve variables</strong><br />
+      <strong>Resolve variables</strong><br/>
       Variables such as <code>${profile}</code> are resolved from:
       environment variables, provided values, or defaults.
     </li>
 
     <li>
-      <strong>Generate logical resource names</strong><br />
+      <strong>Generate logical resource names</strong><br/>
       Liana generates logical names:
       <ul>
         <li><code>application</code></li>
@@ -61,26 +61,26 @@ application-dev.yaml
     </li>
 
     <li>
-      <strong>Provider resolution</strong><br />
+      <strong>Provider resolution</strong><br/>
       Each logical name is passed to the active
       <em>ResourceProvider</em> (classpath by default),
       which resolves matching physical files.
     </li>
 
     <li>
-      <strong>Loader selection</strong><br />
+      <strong>Loader selection</strong><br/>
       Based on file extension, a matching
       <em>ResourceLoader</em> is selected
       (YAML, properties, JSON, or XML).
     </li>
 
     <li>
-      <strong>Parse configuration</strong><br />
+      <strong>Parse configuration</strong><br/>
       Each file is parsed into a structured configuration tree.
     </li>
 
     <li>
-      <strong>Merge results</strong><br />
+      <strong>Merge results</strong><br/>
       Trees are merged in order:
       <ul>
         <li><code>application.yaml</code></li>
@@ -90,13 +90,13 @@ application-dev.yaml
     </li>
 
     <li>
-      <strong>Interpolate placeholders</strong><br />
+      <strong>Interpolate placeholders</strong><br/>
       All placeholders are resolved across the full configuration tree,
       including nested objects and lists.
     </li>
 
     <li>
-      <strong>Freeze configuration</strong><br />
+      <strong>Freeze configuration</strong><br/>
       The final configuration becomes immutable and thread-safe.
     </li>
   </ol>
@@ -107,7 +107,7 @@ application-dev.yaml
     Given the following configuration:
   </p>
 
-  <pre><code># application.yaml
+  <pre><code class="language-bash"># application.yaml
 server:
   port: 8080
 
@@ -120,8 +120,7 @@ server:
     The final resolved value will be:
   </p>
 
-  <pre><code>server.port = 9090
-</code></pre>
+  <pre><code class="language-bash">server.port = 9090 </code></pre>
 
   <h2>Error handling</h2>
 
@@ -142,9 +141,8 @@ server:
   </ul>
 
   <p class="next-step">
-    Continue with
-    <a href="#advanced">Advanced Usage</a>
-    to customize providers, loaders, and resolution behavior.
+    Next steps?
+    Jump to <a href="#advanced">Advanced Usage</a>.
   </p>
 
 </section>

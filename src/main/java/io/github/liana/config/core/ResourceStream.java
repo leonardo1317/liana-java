@@ -45,4 +45,21 @@ public interface ResourceStream extends AutoCloseable {
   @Override
   void close() throws IOException;
 
+  /**
+   * Creates a {@link ResourceStream} from the given name and {@link InputStream}.
+   *
+   * <p>This is a convenience factory method for creating a default {@link ResourceStream}
+   * implementation backed by the provided stream.
+   *
+   * <p>The caller is responsible for ensuring that the given stream is open and for eventually
+   * closing the returned resource.
+   *
+   * @param name   the logical name of the resource; must not be {@code null}
+   * @param stream the input stream providing the resource content; must not be {@code null}
+   * @return a {@link ResourceStream} wrapping the given name and stream
+   * @throws NullPointerException if {@code name} or {@code stream} is {@code null}
+   */
+  static ResourceStream from(String name, InputStream stream) {
+    return new DefaultResourceStream(name, stream);
+  }
 }

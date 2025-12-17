@@ -13,6 +13,7 @@
  */
 package io.github.liana.config.api;
 
+import io.github.liana.config.core.MapConfiguration;
 import io.github.liana.config.core.type.TypeOf;
 import io.github.liana.config.core.ValueResolver;
 import io.github.liana.config.core.exception.ConversionException;
@@ -245,6 +246,24 @@ public interface Configuration {
    *                              target type
    */
   <T> Optional<T> getRootAs(Type type);
+
+  /**
+   * Creates a {@link Configuration} backed by the given nested map.
+   *
+   * <p>The provided map represents the root of the configuration tree. Nested maps are treated
+   * as hierarchical configuration nodes and are resolved using dot-separated keys.
+   *
+   * <p>The returned configuration is read-only. Changes to the underlying map after creation
+   * may result in undefined behavior depending on the implementation.
+   *
+   * @param nestedMap the root configuration map; must not be {@code null}
+   * @return a {@link Configuration} backed by the given map
+   * @throws NullPointerException if {@code nestedMap} is {@code null}
+   * @throws ConversionException  if the underlying data cannot be read or parsed
+   */
+  static Configuration from(Map<String, Object> nestedMap) {
+    return new MapConfiguration(nestedMap);
+  }
 
   private static MissingConfigException missingConfigException(String key) {
     return new MissingConfigException("Missing required config: " + key);

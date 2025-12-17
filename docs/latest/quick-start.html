@@ -36,9 +36,9 @@ server:
     <code>ResourceLocation</code> to load configuration data.
   </p>
 
-  <pre><code class="language-java">ResourceLocation location = ResourceLocation.builder().build();
+  <pre><code class="language-java">ConfigurationManager manager = ConfigurationManager.builder().build();
 
-ConfigurationManager manager = ConfigurationManager.builder().build();
+ResourceLocation location = ResourceLocation.builder().build();
 
 Configuration config = manager.load(location);
 </code></pre>
@@ -76,7 +76,7 @@ int port = config.getInt("server.port", 8080);
     This means Liana will automatically try to load:
   </p>
 
-  <pre><code>application.(properties|yaml|json|xml)
+  <pre><code class="language-bash">application.(properties|yaml|json|xml)
 application-${profile}.(properties|yaml|json|xml)
 </code></pre>
 
@@ -85,14 +85,8 @@ application-${profile}.(properties|yaml|json|xml)
     <code>default</code> is used.
   </p>
 
-
   <p class="next-step">
-    Continue with
-    <a href="#architecture">Architecture</a>
-    to understand how configuration is resolved,
-    or jump to
-    <a href="#advanced">Advanced Usage</a>
-    for custom providers and loaders.
+    Next steps?
+    See <a href="#architecture">Architecture</a>, or jump to <a href="#advanced">Advanced Usage</a>.
   </p>
-
 </section>

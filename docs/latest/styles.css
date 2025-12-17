@@ -292,6 +292,7 @@ pre {
   font-size: 0.9rem;
   line-height: 1.6;
   margin: 1.5rem 0;
+  position: relative;
 }
 
 code {
@@ -339,5 +340,33 @@ pre code::before {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #94a3b8; /* slate-400 */
+}
+
+/* Copy button */
+.copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+pre:hover .copy-btn {
+  opacity: 1;
+}
+
+.copy-btn.copied {
+  background: #2e7d32;
+  border-color: #2e7d32;
 }
 

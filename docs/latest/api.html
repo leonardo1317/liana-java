@@ -1,0 +1,144 @@
+<section class="doc-section">
+  <h1>API Reference</h1>
+
+  <p class="lead">
+    This section documents detailed behaviors, optional methods, and exceptions not fully covered in
+    usage examples.
+    It serves as a technical reference for developers who need exact API capabilities.
+  </p>
+
+  <h2>ConfigurationManager</h2>
+  <ul>
+    <li>
+      <strong>load(ResourceLocation location)</strong> – loads configuration from the specified
+      location.
+      <em>Throws:</em> <code>NullPointerException</code> if <code>location</code> is null.
+      <em>Notes:</em> Returns immutable <code>Configuration</code>. Duplicate resources are merged
+      in resolution order.
+    </li>
+    <li>
+      <strong>builder()</strong> – creates a builder for constructing a
+      <code>ConfigurationManager</code> instance.
+      <em>Notes:</em> Applies defaults for providers and loaders.
+    </li>
+  </ul>
+
+  <h2>ConfigurationManagerBuilder</h2>
+  <ul>
+    <li>
+      <strong>addProviders(ResourceProvider... providers)</strong> – registers one or more
+      providers.
+      <em>Notes:</em> Providers must have unique keys; duplicates are ignored or overridden.
+    </li>
+    <li>
+      <strong>addLoaders(ResourceLoader... loaders)</strong> – registers one or more loaders.
+      <em>Notes:</em> Loaders are selected based on file extensions; parsing exceptions propagate as
+      <code>RuntimeException</code>.
+    </li>
+    <li>
+      <strong>build()</strong> – returns an immutable <code>ConfigurationManager</code>.
+      <em>Throws:</em> <code>IllegalStateException</code> if mandatory components are missing.
+    </li>
+  </ul>
+
+  <h2>ResourceLocation</h2>
+  <ul>
+    <li><strong>provider()</strong> – returns provider identifier; <em>default:</em> "classpath".
+    </li>
+    <li><strong>baseDirectories()</strong> – ordered set of directories used for relative path
+      resolution.
+    </li>
+    <li><strong>resourceNames()</strong> – logical resource names; duplicates resolved in order.
+    </li>
+    <li><strong>variables()</strong> – placeholder variables; <em>Notes:</em> invalid keys may throw
+      <code>InvalidVariablesException</code>.
+    </li>
+    <li><strong>verboseLogging()</strong> – indicates whether detailed logging is enabled.</li>
+    <li><strong>placeholder()</strong> – returns the placeholder strategy; default uses
+      <code>${...}</code> syntax.
+    </li>
+    <li><strong>builder()</strong> – creates a <code>ResourceLocationBuilder</code> for constructing
+      instances.
+    </li>
+  </ul>
+
+  <h2>ResourceLocationBuilder</h2>
+  <ul>
+    <li><strong>provider(String provider)</strong> – sets the provider; default is "classpath".</li>
+    <li><strong>baseDirectories(String... baseDirectories)</strong> – sets ordered directories;
+      order affects resolution.
+    </li>
+    <li><strong>addResource(String resourceName)</strong> – adds a single resource to resolve.</li>
+    <li><strong>addResources(String... resources)</strong> – adds multiple resources to resolve.
+    </li>
+    <li><strong>addResourceFromList(List&lt;String&gt; resources)</strong> – adds resources from a
+      list.
+    </li>
+    <li><strong>addVariable(String key, String value)</strong> – adds a single variable; invalid
+      pairs throw <code>InvalidVariablesException</code>.
+    </li>
+    <li><strong>addVariables(String... variables)</strong> – adds alternating key/value pairs.</li>
+    <li><strong>addVariablesFromMap(Map&lt;String,String&gt; variables)</strong> – adds variables
+      from a map.
+    </li>
+    <li><strong>verboseLogging(boolean verboseLogging)</strong> – enables/disables detailed logging.
+    </li>
+    <li><strong>placeholders(Placeholder placeholder)</strong> – sets the placeholder engine;
+      defaults applied if missing.
+    </li>
+    <li><strong>build()</strong> – returns an immutable <code>ResourceLocation</code> instance.</li>
+  </ul>
+
+  <h2>Configuration</h2>
+  <ul>
+    <li><strong>containsKey(String key)</strong> – checks existence of a key.</li>
+    <li>
+      <strong>get / getOrThrow</strong> – type-safe access.
+      <em>Throws:</em> <code>NoSuchElementException</code> for required values.
+      <em>Notes:</em> Generic overloads support lists and maps; fallback defaults can be provided.
+    </li>
+    <li>
+      <strong>getList / getMap</strong> – converts sections into collections.
+      <em>Notes:</em> Empty or missing sections return empty collection if default provided.
+    </li>
+    <li>
+      <strong>getRootAsMap / getRootAs(Type)</strong> – returns the full configuration tree.
+      <em>Notes:</em> Returns unmodifiable map; type conversion may throw <code>IllegalArgumentException</code>
+      if incompatible.
+    </li>
+    <li><strong>getString / getInt / getBoolean / getDouble / getDuration</strong> – retrieves typed
+      values, optionally with default.
+    </li>
+  </ul>
+
+  <h2>ResourceProvider / ResourceLoader</h2>
+  <ul>
+    <li><strong>resolveResource / load</strong> – core methods to obtain configuration content;
+      runtime exceptions may occur on missing file, parse failure, or invalid content.
+    </li>
+    <li><strong>validateResource(...)</strong> – optional validation; implementers may override to
+      enforce stricter rules.
+    </li>
+    <li><strong>keys()</strong> – returns unique provider identifiers or supported file extensions.
+    </li>
+  </ul>
+
+  <h2>Placeholder / PlaceholderBuilder</h2>
+  <ul>
+    <li>
+      <strong>replaceIfAllResolvable</strong> – resolves placeholders; returns <code>Optional.empty()</code>
+      if any cannot be resolved.
+      <em>Notes:</em> Supports extra sources or maps for dynamic resolution.
+    </li>
+    <li>
+      <strong>builder()</strong> – allows configuring prefix, suffix, delimiter, and escape
+      character.
+      <em>Notes:</em> Default syntax: <code>${key:default}</code>.
+    </li>
+  </ul>
+
+  <p class="next-step">
+    Next steps? Review <a href="#advanced">Advanced Usage</a> and <a href="#pojo">POJO Mapping</a> for
+    practical examples.
+  </p>
+</section>

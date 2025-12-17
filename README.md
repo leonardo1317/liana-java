@@ -42,7 +42,8 @@ Liana works out of the box with sensible defaults.
 
 ```java
 ConfigurationManager manager = ConfigurationManager.builder().build();
-Configuration config = manager.load(ResourceLocation.builder().build());
+ResourceLocation location = ResourceLocation.builder().build();
+Configuration config = manager.load(location);
 
 String appName = config.getString("app.name", "DefaultApp");
 int port = config.getInt("server.port", 8080);
